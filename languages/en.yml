@@ -1,0 +1,73 @@
+nav:
+  home: Home
+  articles: Articles
+  about: About
+  # First item in the header utility bar. Not the same place as nav.home.
+  site_home: Home
+sidebar:
+  quick_index: Quick index
+  categories: Categories
+  tags: Tags
+  subscribe: Subscribe
+  social: Follow and contact
+  # The placeholder item in the quick index dropdown
+  jump: Go to a page…
+  # Shown in place of the category list when the site has no categories yet
+  all_posts: All posts
+index:
+  recent: Recent posts
+  more: More posts
+post:
+  published: Published
+  updated: Updated
+  comments: Comments
+  # Between the label above and the date
+  meta_sep: ": "
+  # %s is the number of minutes
+  reading_time: about %s min read
+  toc: On this page
+  related: Related posts
+pager:
+  aria: Pagination
+  prev: ← Previous
+  next: Next →
+  # The two %s are the current page and the total
+  info: Page %s of %s
+archive:
+  title: Archive
+# The all-tags and all-categories pages (layout/_partial/term-index.ejs)
+terms:
+  all_tags: All tags
+  all_categories: All categories
+  empty_tags: No tags have been used on this site yet.
+  empty_categories: No posts have been filed into a category yet.
+  # First half of the second empty-state line; a link to /archives/ follows, then empty_end
+  empty_tail: You can start with the
+  empty_end: "."
+  # %s is the number of posts. English needs two forms here; Chinese uses the same text for both.
+  count: "%s posts"
+  count_one: "%s post"
+  category_title: "Category: %s"
+  tag_title: "Tag: %s"
+footer:
+  sitemap: Sitemap
+search:
+  placeholder: Search this site…
+  label: "Search this site:"
+  button: Search
+# Comment area (layout/_partial/comments.ejs). loading / retry / failed are read by the inline script.
+comments:
+  title: Comments
+  hint: Click the button below to load the comment box. A comment appears only after it is approved.
+  open: Post a comment
+  notice: Submitted. It appears once it is approved.
+  loading: Loading…
+  retry: Could not load. Click to retry.
+  failed: The comment component could not load. Check your connection and try again.
+
+# Display names for social links, looked up by the key used in theme.social_links.
+# A key with no entry here falls back to the key itself.
+social:
+  rss: RSS
+  github: GitHub
+  email: Email

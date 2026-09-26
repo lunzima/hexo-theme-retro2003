@@ -7,7 +7,7 @@
   <section class="box">
     <h3 class="box-title"><%= __('sidebar.quick_index') %></h3>
     <select class="quick-index">
-      <option value="">选择要去的页面…</option>
+      <option value=""><%= __('sidebar.jump') %></option>
       <option value="<%- url_for('/') %>"><%= __('nav.home') %></option>
       <% for (var name in theme.menu) { %>
       <option value="<%- url_for(theme.menu[name]) %>"><%= name %></option>
@@ -35,7 +35,7 @@
         <% }); %>
         <li><a href="<%- url_for('/categories/') %>"><%= __('terms.all_categories') %></a></li>
       <% } else { %>
-        <li><a href="<%- url_for('/archives/') %>">全部文章</a></li>
+        <li><a href="<%- url_for('/archives/') %>"><%= __('sidebar.all_posts') %></a></li>
       <% } %>
     </ul>
   </section>

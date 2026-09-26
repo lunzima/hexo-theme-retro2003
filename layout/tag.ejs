@@ -1,5 +1,5 @@
 <section class="card">
-  <h2 class="card-head">标签：<%= page.tag %></h2>
+  <h2 class="card-head"><%= __('terms.tag_title', page.tag) %></h2>
   <div class="card-body">
     <ul class="post-list">
     <% page.posts.each(function(post){ %>

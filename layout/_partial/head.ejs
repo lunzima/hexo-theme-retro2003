@@ -26,7 +26,7 @@
       · 七个档名之一 —— 固定该档；'default' 即水元素基准档，不写属性。这也是不写时的默认值
       · 'weekly' —— 按周轮换，属性由下面那段内联脚本在首次绘制前设置
     合法值在这里断言一次：写错直接让构建失败，不静默退回默认档。 %>
-<html lang="<%= config.language || 'zh-cn' %>"<% if (fixedPal) { %> data-palette="<%= fixedPal %>"<% } %>>
+<html lang="<%= config.language || 'en' %>"<% if (fixedPal) { %> data-palette="<%= fixedPal %>"<% } %>>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">

@@ -12,23 +12,24 @@
 %>
 <% if (showComments) { %>
 <section class="comments" id="comments">
-  <h3 class="comments-title">评论</h3>
+  <h3 class="comments-title"><%= __('comments.title') %></h3>
   <div class="comments-body">
     <div id="twikoo-intro">
-      <p class="comments-hint">点击下面的按钮加载评论框。评论提交后需经确认，不会立即显示。</p>
-      <button class="comments-open" id="twikoo-open" type="button">发表评论</button>
+      <p class="comments-hint"><%= __('comments.hint') %></p>
+      <button class="comments-open" id="twikoo-open" type="button"><%= __('comments.open') %></button>
     </div>
     <div id="twikoo"></div>
-    <p class="comments-hint" id="twikoo-notice" hidden>已提交，确认后会显示。</p>
+    <p class="comments-hint" id="twikoo-notice" hidden><%= __('comments.notice') %></p>
   </div>
 </section>
 <script>(function(){
+  var T=<%- JSON.stringify({ loading: __('comments.loading'), retry: __('comments.retry'), failed: __('comments.failed') }).replace(/</g, '\\u003c') %>;
   var b=document.getElementById("twikoo-open"), t=null, pending=false;
   if(!b) return;
   function hideIntro(){ var i=document.getElementById("twikoo-intro"); if(i) i.style.display="none"; }
   function notice(){ var n=document.getElementById("twikoo-notice"); if(n) n.removeAttribute("hidden"); }
   b.addEventListener("click", function(){
-    if (t) return; t = 1; b.disabled = true; b.textContent = "加载中…";
+    if (t) return; t = 1; b.disabled = true; b.textContent = T.loading;
     var s = document.createElement("script");
     s.src = "/lib/twikoo/twikoo.all.min.js";
     s.onload = function(){
@@ -44,9 +45,9 @@
       });
     };
     s.onerror = function(){
-      b.disabled = false; b.textContent = "加载失败，点击重试"; t = null;
+      b.disabled = false; b.textContent = T.retry; t = null;
       var h=document.querySelector("#twikoo-intro .comments-hint");
-      if (h) h.textContent = "评论组件加载失败，请检查网络后重试。";
+      if (h) h.textContent = T.failed;
     };
     document.body.appendChild(s);
   });

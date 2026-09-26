@@ -31,13 +31,13 @@
     <ul class="term-list">
       <% items.forEach(function(it){ %>
       <li class="term-item">
-        <a class="term-link" href="<%- url_for(it.path) %>"><span class="term-name"><%= it.name %></span><span class="term-count"><%= it.count %> 篇</span></a>
+        <a class="term-link" href="<%- url_for(it.path) %>"><span class="term-name"><%= it.name %></span><span class="term-count"><%= it.count === 1 ? __('terms.count_one', it.count) : __('terms.count', it.count) %></span></a>
       </li>
       <% }); %>
     </ul>
     <% } else { %>
     <p class="term-empty"><%= termEmpty %></p>
-    <p class="term-empty"><%= __('terms.empty_tail') %><a href="<%- url_for('/archives/') %>"><%= __('archive.title') %></a>。</p>
+    <p class="term-empty"><%= __('terms.empty_tail') %><a href="<%- url_for('/archives/') %>"><%= __('archive.title') %></a><%= __('terms.empty_end') %></p>
     <% } %>
   </div>
 </article>

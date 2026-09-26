@@ -1,7 +1,7 @@
 <div class="utility">
   <div class="utility-inner">
     <ul class="utility-list">
-      <li><a href="<%- url_for('/') %>">本站首页</a></li>
+      <li><a href="<%- url_for('/') %>"><%= __('nav.site_home') %></a></li>
       <li><a href="<%- url_for('/archives/') %>"><%= __('footer.sitemap') %></a></li>
     </ul>
   </div>
@@ -26,10 +26,10 @@
     %>
     <a class="banner" href="<%- url_for('/') %>"><span class="logo"><%= head %></span><% if (tail) { %><span class="banner-sub"><%= tail %></span><% } %></a>
     <form class="masthead-search" action="<%- url_for('/') %>" method="get" role="search">
-      <label class="search-label" for="search-input">搜索本站：</label>
+      <label class="search-label" for="search-input"><%= __('search.label') %></label>
       <input class="search-input" id="search-input" type="search" name="q"
              placeholder="<%= __('search.placeholder') %>" autocomplete="off">
-      <button class="search-btn" type="submit">搜索</button>
+      <button class="search-btn" type="submit"><%= __('search.button') %></button>
       <div class="search-results" id="search-results" hidden></div>
     </form>
   </div>

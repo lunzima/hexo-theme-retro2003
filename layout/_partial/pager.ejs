@@ -3,17 +3,17 @@
     第 11 篇之后的文章从首页和归档都无法抵达。
     page.prev / page.next 是页码（第 1 页的 prev 为 0），prev_link / next_link 是路径。 %>
 <% if (page.total > 1) { %>
-<nav class="pager" aria-label="分页">
+<nav class="pager" aria-label="<%= __('pager.aria') %>">
   <% if (page.prev) { %>
-  <a class="pager-link" href="<%- url_for(page.prev_link) %>">← 上一页</a>
+  <a class="pager-link" href="<%- url_for(page.prev_link) %>"><%= __('pager.prev') %></a>
   <% } else { %>
-  <span class="pager-link is-off">← 上一页</span>
+  <span class="pager-link is-off"><%= __('pager.prev') %></span>
   <% } %>
-  <span class="pager-info">第 <%= page.current %> / <%= page.total %> 页</span>
+  <span class="pager-info"><%= __('pager.info', page.current, page.total) %></span>
   <% if (page.next) { %>
-  <a class="pager-link" href="<%- url_for(page.next_link) %>">下一页 →</a>
+  <a class="pager-link" href="<%- url_for(page.next_link) %>"><%= __('pager.next') %></a>
   <% } else { %>
-  <span class="pager-link is-off">下一页 →</span>
+  <span class="pager-link is-off"><%= __('pager.next') %></span>
   <% } %>
 </nav>
 <% } %>

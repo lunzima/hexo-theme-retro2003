@@ -2,12 +2,18 @@ nav:
   home: 首页
   articles: 文章
   about: 关于
+  # 页眉工具条第一项。与 nav.home 不是同一处，值可以相同，键要分开。
+  site_home: 本站首页
 sidebar:
   quick_index: 快速索引
   categories: 文章分类
   tags: 标签
   subscribe: 订阅电子期刊
   social: 关注与联系
+  # 「快速索引」下拉里那条占位项
+  jump: 选择要去的页面…
+  # 站点还没有分类时，那一格退化成归档链接
+  all_posts: 全部文章
 index:
   recent: 最新文章
   more: 更多文章
@@ -15,6 +21,18 @@ post:
   published: 发布时间
   updated: 更新时间
   comments: 留言板
+  # 发布时间与日期之间。中文用全角冒号，英文用半角加空格。
+  meta_sep: "："
+  # %s 是阅读分钟数
+  reading_time: 约 %s 分钟读完
+  toc: 本文目录
+  related: 相关文章
+pager:
+  aria: 分页
+  prev: ← 上一页
+  next: 下一页 →
+  # 两个 %s 依次是当前页与总页数
+  info: 第 %s / %s 页
 archive:
   title: 文章归档
 # 「全部标签 / 全部分类」总览页（layout/_partial/term-index.ejs）
@@ -23,12 +41,29 @@ terms:
   all_categories: 全部分类
   empty_tags: 本站文章还没有用过标签。
   empty_categories: 本站文章还没有归入分类。
-  # 空态第二句的前半截，后面紧跟一个指向 /archives/ 的链接
+  # 空态第二句的前半截，后面紧跟一个指向 /archives/ 的链接，empty_end 收尾
   empty_tail: 可以先去
+  empty_end: 。
+  # %s 是篇数。英文的单复数在这里分开，中文两边同形。
+  count: "%s 篇"
+  count_one: "%s 篇"
+  category_title: "分类：%s"
+  tag_title: "标签：%s"
 footer:
   sitemap: 站点地图
 search:
   placeholder: 搜索本站…
+  label: "搜索本站："
+  button: 搜索
+# 评论区（layout/_partial/comments.ejs）。loading / retry / failed 由内联脚本取用。
+comments:
+  title: 评论
+  hint: 点击下面的按钮加载评论框。评论提交后需经确认，不会立即显示。
+  open: 发表评论
+  notice: 已提交，确认后会显示。
+  loading: 加载中…
+  retry: 加载失败，点击重试
+  failed: 评论组件加载失败，请检查网络后重试。
 
 # 社交链接的显示名（按 theme.social_links 的 key 取；未定义的回落成 key 本身）
 social:

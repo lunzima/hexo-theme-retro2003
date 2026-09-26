@@ -41,6 +41,25 @@ your own settings stay.
 Hexo copies the theme's source/ folder to public/ unchanged. Templates can therefore
 link to /js/... and /audio/... directly.
 
+## Language
+
+The theme carries two sets of interface text: English in languages/en.yml and Chinese
+in languages/zh-CN.yml. Pick one with `language` in your site _config.yml:
+
+```yaml
+language: en        # or zh-CN
+```
+
+The value has to match a file name under languages/ exactly. Hexo uses it as a key, and
+a value that matches nothing falls back to English. The interface then changes language
+with no warning at all. Write `zh-CN`, not `zh-cn`.
+
+There is no language switcher. One language applies to the whole site.
+
+To add a language, copy languages/en.yml to languages/<code>.yml and translate the
+values. Leave the keys alone. A `%s` in a value marks a place where a number or a name
+is filled in.
+
 ## Player
 
 The player is on by default. Its settings are under `bgm:`.
