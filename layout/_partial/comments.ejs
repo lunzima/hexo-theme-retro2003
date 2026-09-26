@@ -1,0 +1,54 @@
+<%#
+  评论。默认关，目前只实现了 Twikoo，要填自己的后端地址。
+  前端库不随主题分发：twikoo.all.min.js 要放进站点的 source/lib/twikoo/（Hexo 原样拷到
+  public/lib/twikoo/），并且只在点「发表评论」时才请求 —— 首屏不背这 810 KB。
+  这一块要落在正文之后、同一栏内（见 post.ejs / page.ejs），塞到 </body> 前会掉到 .page
+  之外，整视口宽、贴最左、还在页脚下方。
+%>
+<%
+  var cm = theme.comments || {};
+  // page.comments === false 是文章级的关法（front-matter 里写 comments: false）
+  var showComments = cm.enable && cm.twikoo_env && page.comments !== false;
+%>
+<% if (showComments) { %>
+<section class="comments" id="comments">
+  <h3 class="comments-title">评论</h3>
+  <div class="comments-body">
+    <div id="twikoo-intro">
+      <p class="comments-hint">点击下面的按钮加载评论框。评论提交后需经确认，不会立即显示。</p>
+      <button class="comments-open" id="twikoo-open" type="button">发表评论</button>
+    </div>
+    <div id="twikoo"></div>
+    <p class="comments-hint" id="twikoo-notice" hidden>已提交，确认后会显示。</p>
+  </div>
+</section>
+<script>(function(){
+  var b=document.getElementById("twikoo-open"), t=null, pending=false;
+  if(!b) return;
+  function hideIntro(){ var i=document.getElementById("twikoo-intro"); if(i) i.style.display="none"; }
+  function notice(){ var n=document.getElementById("twikoo-notice"); if(n) n.removeAttribute("hidden"); }
+  b.addEventListener("click", function(){
+    if (t) return; t = 1; b.disabled = true; b.textContent = "加载中…";
+    var s = document.createElement("script");
+    s.src = "/lib/twikoo/twikoo.all.min.js";
+    s.onload = function(){
+      hideIntro();
+      if (typeof twikoo !== "undefined") twikoo.init({
+        envId: <%- JSON.stringify(cm.twikoo_env).replace(/</g, '\\u003c') %>,
+        el: "#twikoo",
+        // Twikoo 提交成功后不弹任何提示，只清空表单并重载列表；而刚提交的那条会被扣留、
+        // 不在列表里，用户看到的就是「表单清了、评论没了」。onSubmit 在提交之前触发，
+        // 确认不了结果，所以用「标记 + 下一次列表加载」组合判定提交成功（失败则不重载）。
+        onSubmit: function () { pending = true; },
+        onCommentLoaded: function () { if (pending) { pending = false; notice(); } }
+      });
+    };
+    s.onerror = function(){
+      b.disabled = false; b.textContent = "加载失败，点击重试"; t = null;
+      var h=document.querySelector("#twikoo-intro .comments-hint");
+      if (h) h.textContent = "评论组件加载失败，请检查网络后重试。";
+    };
+    document.body.appendChild(s);
+  });
+})();</script>
+<% } %>

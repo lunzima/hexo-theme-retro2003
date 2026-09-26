@@ -1,0 +1,13 @@
+<%# 跑马灯必须排在 .footer 之前 —— 写在 .footer 之后会渲染到页脚下方。 %>
+<% if (theme.marquee && theme.marquee.enable) { %>
+<div class="footer-marquee"><span><%= theme.marquee.text %></span></div>
+<% } %>
+<% var ft = theme.footer || {}; %>
+<div class="footer">
+  <div class="footer-inner">
+    <%# since 留空时只印当前年，不要留成「2026」前面挂一个孤零零的连字符 %>
+    <span>Copyright © <%= ft.since ? ft.since + '-' : '' %><%= date(Date.now(), 'YYYY') %> <%= config.author %></span>
+    <% if (ft.beian) { %> · <a href="https://beian.miit.gov.cn" target="_blank" rel="noopener"><%= ft.beian %></a><% } %>
+    · <a href="<%- url_for('/archives/') %>"><%= __('footer.sitemap') %></a>
+  </div>
+</div>

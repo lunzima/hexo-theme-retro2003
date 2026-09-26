@@ -1,0 +1,10 @@
+<div class="navbar">
+  <div class="navbar-list">
+    <% var items = [{label: __('nav.home'), href: url_for('/')}]; %>
+    <% for (var name in theme.menu) { items.push({label: name, href: url_for(theme.menu[name])}); } %>
+    <% items.forEach(function(it, i){ %>
+      <% if (i > 0) { %><span class="ltsep">|</span><% } %>
+      <span class="lt0" onmouseover="this.className='lt1'" onmouseout="this.className='lt0'"><a href="<%- it.href %>"><%= it.label %></a></span>
+    <% }); %>
+  </div>
+</div>

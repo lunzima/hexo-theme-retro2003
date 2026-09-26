@@ -1,0 +1,18 @@
+<%# 首页正文栏 = 最新文章。左侧导航与右侧栏由 layout.ejs 统一提供，
+    这里不再自带「栏目导航」「订阅」卡片（那两张属于侧栏，重复了）。 %>
+<section class="card">
+  <h2 class="card-head"><%= __('index.recent') %></h2>
+  <div class="card-body">
+    <ul class="post-list">
+    <% page.posts.each(function(post){ %>
+      <li class="post-item">
+        <h3 class="post-item-title"><a href="<%- url_for(post.path) %>"><%= post.title %></a></h3>
+        <div class="post-item-meta"><%= date(post.date, 'YYYY-MM-DD') %></div>
+        <div class="post-item-excerpt"><%= strip_html(post.excerpt || post.content).substring(0, 120) %>…</div>
+      </li>
+    <% }); %>
+    </ul>
+    <p class="card-more"><a href="<%- url_for('/archives/') %>"><%= __('index.more') %> …</a></p>
+    <%- partial('_partial/pager') %>
+  </div>
+</section>

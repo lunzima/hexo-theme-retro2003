@@ -1,0 +1,55 @@
+<%# 左栏 = 站点导航。开关取自 theme.sidebar，与右栏 _partial/aside.ejs 共用同一组配置。 %>
+<% var sb = theme.sidebar || {}; %>
+<aside class="sidebar">
+  <%# 「快速索引」下拉。retro.js 里对应的 change 行为与样式都要靠本模板这个
+      <select> 才落地 —— 没有它，那些 JS 就是死代码。 %>
+  <% if (sb.quick_index !== false) { %>
+  <section class="box">
+    <h3 class="box-title"><%= __('sidebar.quick_index') %></h3>
+    <select class="quick-index">
+      <option value="">选择要去的页面…</option>
+      <option value="<%- url_for('/') %>"><%= __('nav.home') %></option>
+      <% for (var name in theme.menu) { %>
+      <option value="<%- url_for(theme.menu[name]) %>"><%= name %></option>
+      <% } %>
+      <%# 两个总览页不进 theme.menu —— 那个配置同时是页眉导航的数据源，
+          往它里面加项会把页眉那条横带的几何一起改掉（五条横带等宽是硬不变量）。
+          但总览页必须有站内入口，否则就是孤儿页；放这里是因为这个下拉本来的
+          用途就是「选择要去的页面」。 %>
+      <option value="<%- url_for('/tags/') %>"><%= __('terms.all_tags') %></option>
+      <option value="<%- url_for('/categories/') %>"><%= __('terms.all_categories') %></option>
+    </select>
+  </section>
+  <% } %>
+
+  <%# 格子标题必须与内容相符：没有分类时标题退化成「文章归档」并给「全部文章」链接，
+      否则会出现「文章分类」下面挂着「文章归档」这种对不上的组合。 %>
+  <% if (sb.categories !== false) { %>
+  <% var hasCats = site.categories.length > 0; %>
+  <section class="box">
+    <h3 class="box-title"><%= hasCats ? __('sidebar.categories') : __('archive.title') %></h3>
+    <ul class="box-list">
+      <% if (hasCats) { %>
+        <% site.categories.sort('name').each(function(cat){ %>
+        <li><a href="<%- url_for(cat.path) %>"><%= cat.name %></a></li>
+        <% }); %>
+        <li><a href="<%- url_for('/categories/') %>"><%= __('terms.all_categories') %></a></li>
+      <% } else { %>
+        <li><a href="<%- url_for('/archives/') %>">全部文章</a></li>
+      <% } %>
+    </ul>
+  </section>
+  <% } %>
+
+  <% if (sb.tags !== false && site.tags.length) { %>
+  <section class="box">
+    <h3 class="box-title"><%= __('sidebar.tags') %></h3>
+    <ul class="box-list">
+      <% site.tags.sort('name').each(function(tag){ %>
+      <li><a href="<%- url_for(tag.path) %>"><%= tag.name %></a></li>
+      <% }); %>
+      <li><a href="<%- url_for('/tags/') %>"><%= __('terms.all_tags') %></a></li>
+    </ul>
+  </section>
+  <% } %>
+</aside>

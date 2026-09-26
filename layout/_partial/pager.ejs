@@ -1,0 +1,19 @@
+<%# 分页导航。Hexo 的分页生成器（hexo-generator-index / -archive / -tag / -category）
+    在文章数超过 per_page 时会产出 /page/2/ 等页面，但模板不输出翻页链接的话，
+    第 11 篇之后的文章从首页和归档都无法抵达。
+    page.prev / page.next 是页码（第 1 页的 prev 为 0），prev_link / next_link 是路径。 %>
+<% if (page.total > 1) { %>
+<nav class="pager" aria-label="分页">
+  <% if (page.prev) { %>
+  <a class="pager-link" href="<%- url_for(page.prev_link) %>">← 上一页</a>
+  <% } else { %>
+  <span class="pager-link is-off">← 上一页</span>
+  <% } %>
+  <span class="pager-info">第 <%= page.current %> / <%= page.total %> 页</span>
+  <% if (page.next) { %>
+  <a class="pager-link" href="<%- url_for(page.next_link) %>">下一页 →</a>
+  <% } else { %>
+  <span class="pager-link is-off">下一页 →</span>
+  <% } %>
+</nav>
+<% } %>

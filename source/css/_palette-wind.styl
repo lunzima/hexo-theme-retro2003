@@ -1,0 +1,26 @@
+/*
+ * _palette-wind.styl —— 配色档「wind」的令牌覆盖
+ *
+ * 由 style.styl 用 @import 并进 style.css，不单独出文件（文件名以下划线开头，hexo 会跳过它）。
+ * 选择器是 html[data-palette="wind"]：这个属性由 head.ejs 里那段内联脚本按周设置，
+ * 在首次绘制之前执行 —— 所以七档可以一起发而不闪。
+ * html 属性 (0,1,1) 压过 style.styl 里默认档的 :root (0,1,0)。
+ *
+ * 七个档一起发是周轮换的代价：一个访客不再「只下他那一档」，而是下全部七档，
+ * 合计约 2,300 B。选档从服务端挪到浏览器之后，这是必然的一步。
+ *
+ * 值由 D:\Web\dev\scripts\palette-gen.js 生成（保 L/C 只转 H，超色域降彩度，整组按同一 dL 平移过闸门）。
+ * 不要手改 —— 改坏了构建会失败在 scripts/palette-gate.js 那道闸门上。
+ * 闸门断言：文件名、注释里的档名、选择器里的档名，三者必须一致。
+ */
+html[data-palette="wind"]
+  --r2k-blue      oklch(0.5527 0.1029 176.6)
+  --r2k-hi        oklch(0.6130 0.0887 174.3)
+  --r2k-blue-dk   oklch(0.5220 0.0962 177.9)
+  --r2k-navy      oklch(0.3979 0.0733 178.1)
+  --r2k-link      oklch(0.3552 0.0627 185.1)
+  --r2k-visited   oklch(0.4405 0.0719 186.7)
+  --r2k-hover     oklch(0.5038 0.1049 322.1)
+  --r2k-accent    oklch(0.8496 0.0831 13.4)
+  --r2k-btn-light oklch(0.5507 0.0981 182.9)
+  --r2k-quote-bg  oklch(0.9823 0.0083 194.3)

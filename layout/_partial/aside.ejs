@@ -1,0 +1,35 @@
+<%# 右栏 —— .body 的第三列（444px）靠本模板才有内容：没有 .aside-col 元素，
+    每个内容页右侧就整整空掉 444px。这里安置「订阅 / 关注与联系」，
+    并且与首页共用同一套版式。 %>
+<% var sb = theme.sidebar || {}; %>
+<%# 留空（或没写）的项不渲染 —— 空的 github: "" 会变成一条点不动的链接 %>
+<% var socials = []; for (var k in (theme.social_links || {})) { if (theme.social_links[k]) socials.push(k); } %>
+<% if (sb.subscribe !== false) { %>
+<section class="card">
+  <h3 class="card-head"><%= __('sidebar.subscribe') %></h3>
+  <div class="card-body">
+    <ul class="box-list">
+      <li><a href="<%- url_for('/atom.xml') %>">Atom Feed</a></li>
+      <li><a href="<%- url_for('/rss2.xml') %>">RSS 2.0</a></li>
+      <li><a href="<%- url_for('/archives/') %>"><%= __('archive.title') %></a></li>
+    </ul>
+  </div>
+</section>
+<% } %>
+
+<% if (sb.social !== false && socials.length) { %>
+<section class="card">
+  <h3 class="card-head"><%= __('sidebar.social') %></h3>
+  <div class="card-body">
+    <ul class="box-list">
+      <% socials.forEach(function (k) { %>
+      <% var val = String(theme.social_links[k]); %>
+      <%# 邮箱写成裸地址会被浏览器当成相对路径，这里补上 mailto: %>
+      <% var href = (k === 'email' && val.indexOf('@') > -1 && val.indexOf('mailto:') !== 0) ? 'mailto:' + val : val; %>
+      <% var label = __('social.' + k); if (label === 'social.' + k) label = k; %>
+      <li><a href="<%- href %>"<% if (href.indexOf('mailto:') !== 0) { %> target="_blank" rel="noopener"<% } %>><%= label %></a></li>
+      <% }); %>
+    </ul>
+  </div>
+</section>
+<% } %>

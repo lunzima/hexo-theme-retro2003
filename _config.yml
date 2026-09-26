@@ -1,0 +1,71 @@
+# retro2003 —— 现代实现 × 2003 年门户观感
+# 设计令牌取自 Wayback 存档里真实门户页面的 <style> 与标签属性
+#
+# 这个主题自包含：播放器、看板娘、评论都在主题里，不需要往站点里另加脚本。
+# 三块功能各自有开关，默认只开播放器；看板娘与评论要填自己的资源才会启用。
+
+# 配色档位。default 是水元素档（基准档，也是不写这项时的默认值）。
+# 也可以写死一档不动：wind / stone / thunder / grass / fire / ice。
+# weekly 表示按周轮换、七周一轮，其中一周落回 default；它会在首屏之前跑一小段同步脚本
+# 把档位落到 <html> 的属性上（不闪），七个档都编在同一份 CSS 里、靠属性选择器区分。
+palette: default
+
+menu:
+  文章: /archives/
+  关于: /about/
+
+# 侧栏小部件开关。左栏（_partial/sidebar.ejs）与右栏（_partial/aside.ejs）
+# 共用这一组开关，首页与内容页都是同一套：
+#   左栏 = 快速索引 / 文章分类 / 标签      右栏 = 订阅 / 关注与联系
+sidebar:
+  quick_index: true      # 「快速索引」下拉
+  categories: true
+  tags: true
+  subscribe: true
+  social: true
+
+# 跑马灯（2003 标志性 marquee，用 CSS animation 实现）
+marquee:
+  enable: true
+  text: "本站重新开通博客功能 · 博主不定期写一些乱七八糟的内容"
+
+footer:
+  since: ""              # 起始年份，留空则不显示
+  beian: ""              # 备案号之类的落款，留空则整行不显示
+
+# 右栏「关注与联系」里的链接。留空的项不渲染。
+social_links:
+  rss: /atom.xml
+  github: ""
+  email: ""
+
+# ── 站内 BGM 播放器 ────────────────────────────────────────────────
+# 曲目写在这里，运行时把它们渲染成播放列表。音频放主题的 source/audio/ 下，
+# Hexo 会把它原样拷到 public/audio/，所以 src 写 /audio/<文件名> 即可。
+# seconds 是曲长（秒），用来画进度条 —— 填不准会让进度条与实际播放对不上。
+bgm:
+  enable: true
+  artist: ""             # 锁屏/媒体键上显示的作者名，留空则只显示曲名
+  tracks:
+    - name: 卡农
+      src: /audio/canon.webm
+      seconds: 130.8
+
+# ── 看板娘（Live2D）────────────────────────────────────────────────
+# 默认关。模型不随主题分发 —— 填上自己的模型地址才会启用，见 README「看板娘」一节。
+# 需要四个库：Cubism Core（要自己去 Live2D 官网下载并同意其许可）、pixi.js、
+# pixi-live2d-display、promise-polyfill。前三个不自带，第四个可直接用 npm 里的。
+live2d:
+  enable: false
+  libs: []               # 四个库的地址，按加载顺序写；默认空
+  model_base: ""         # 模型目录，里面要有 model.model3.json
+  fallback: ""           # 拿不到 WebGL 或模型加载失败时显示的静态图，留空则不显示
+  width: 480             # 画布逻辑尺寸
+  height: 270
+  mobile: false          # 移动端是否显示（默认不显示：小屏幕上它会盖住内容）
+
+# ── 评论 ───────────────────────────────────────────────────────────
+# 默认关。目前只实现了 Twikoo，需要你自己的后端地址。
+comments:
+  enable: false
+  twikoo_env: ""         # 形如 https://你的域名/twikoo

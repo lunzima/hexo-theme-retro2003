@@ -1,0 +1,15 @@
+<%#
+  站内 BGM 播放器。
+  容器是一个空的 div：audio 元素由运行时按需创建，所以首屏一格音频字节都不下。
+  运行时脚本必须排在容器之后 —— 它按 id 取容器，取不到就直接退出。
+  曲目与曲长都来自主题配置，不在 JS 里再写一遍。
+%>
+<% var bgm = theme.bgm || {}; %>
+<% if (bgm.enable && bgm.tracks && bgm.tracks.length) { %>
+<div id="bgm-player" hidden></div>
+<script>window.__BGM__=<%- JSON.stringify({
+  artist: bgm.artist || '',
+  tracks: bgm.tracks.map(function (t) { return { name: t.name, src: t.src, seconds: t.seconds }; })
+}).replace(/</g, '\\u003c') %>;</script>
+<script src="/js/bgm-player.js"></script>
+<% } %>

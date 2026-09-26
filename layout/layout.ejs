@@ -1,0 +1,25 @@
+<%- partial('_partial/head') %>
+<body>
+<div class="page">
+  <%- partial('_partial/masthead') %>
+  <%- partial('_partial/navbar') %>
+  <%# 首页与内容页共用同一套 .body 栅格与同一组侧栏 —— 不要给首页另开一套版心，
+      同一个站两套版心两套结构。 %>
+  <div class="body">
+    <%- partial('_partial/sidebar') %>
+    <main class="content">
+      <%- body %>
+    </main>
+    <aside class="aside-col">
+      <%- partial('_partial/aside') %>
+    </aside>
+  </div>
+  <%- partial('_partial/footer') %>
+</div>
+<script src="<%- url_for('/js/retro.js') %>"></script>
+<%# 这两个是站级组件，各自带开关，默认只出播放器；它们自己带容器与运行时脚本，
+    所以排在 .page 之外、</body> 之前 —— 都按视口坐标 fixed 定位，不属于任何一栏。 %>
+<%- partial('_partial/bgm') %>
+<%- partial('_partial/mascot') %>
+</body>
+</html>

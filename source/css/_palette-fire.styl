@@ -1,0 +1,26 @@
+/*
+ * _palette-fire.styl —— 配色档「fire」的令牌覆盖
+ *
+ * 由 style.styl 用 @import 并进 style.css，不单独出文件（文件名以下划线开头，hexo 会跳过它）。
+ * 选择器是 html[data-palette="fire"]：这个属性由 head.ejs 里那段内联脚本按周设置，
+ * 在首次绘制之前执行 —— 所以七档可以一起发而不闪。
+ * html 属性 (0,1,1) 压过 style.styl 里默认档的 :root (0,1,0)。
+ *
+ * 七个档一起发是周轮换的代价：一个访客不再「只下他那一档」，而是下全部七档，
+ * 合计约 2,300 B。选档从服务端挪到浏览器之后，这是必然的一步。
+ *
+ * 值由 D:\Web\dev\scripts\palette-gen.js 生成（保 L/C 只转 H，超色域降彩度，整组按同一 dL 平移过闸门）。
+ * 不要手改 —— 改坏了构建会失败在 scripts/palette-gate.js 那道闸门上。
+ * 闸门断言：文件名、注释里的档名、选择器里的档名，三者必须一致。
+ */
+html[data-palette="fire"]
+  --r2k-blue      oklch(0.4400 0.1394 39.6)
+  --r2k-hi        oklch(0.5003 0.1202 37.3)
+  --r2k-blue-dk   oklch(0.4093 0.1264 40.9)
+  --r2k-navy      oklch(0.2852 0.0881 41.1)
+  --r2k-link      oklch(0.2425 0.0666 48.1)
+  --r2k-visited   oklch(0.3278 0.0795 49.7)
+  --r2k-hover     oklch(0.3911 0.0690 185.1)
+  --r2k-accent    oklch(0.7369 0.1515 236.4)
+  --r2k-btn-light oklch(0.4918 0.1378 46.2)
+  --r2k-quote-bg  oklch(0.9823 0.0083 57.3)

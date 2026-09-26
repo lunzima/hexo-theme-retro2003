@@ -1,0 +1,11 @@
+<section class="card">
+  <h2 class="card-head">分类：<%= page.category %></h2>
+  <div class="card-body">
+    <ul class="post-list">
+    <% page.posts.each(function(post){ %>
+      <li class="post-item"><a href="<%- url_for(post.path) %>"><%= post.title %></a></li>
+    <% }); %>
+    </ul>
+    <%- partial('_partial/pager') %>
+  </div>
+</section>

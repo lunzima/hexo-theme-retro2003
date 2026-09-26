@@ -1,0 +1,37 @@
+nav:
+  home: 首页
+  articles: 文章
+  about: 关于
+sidebar:
+  quick_index: 快速索引
+  categories: 文章分类
+  tags: 标签
+  subscribe: 订阅电子期刊
+  social: 关注与联系
+index:
+  recent: 最新文章
+  more: 更多文章
+post:
+  published: 发布时间
+  updated: 更新时间
+  comments: 留言板
+archive:
+  title: 文章归档
+# 「全部标签 / 全部分类」总览页（layout/_partial/term-index.ejs）
+terms:
+  all_tags: 全部标签
+  all_categories: 全部分类
+  empty_tags: 本站文章还没有用过标签。
+  empty_categories: 本站文章还没有归入分类。
+  # 空态第二句的前半截，后面紧跟一个指向 /archives/ 的链接
+  empty_tail: 可以先去
+footer:
+  sitemap: 站点地图
+search:
+  placeholder: 搜索本站…
+
+# 社交链接的显示名（按 theme.social_links 的 key 取；未定义的回落成 key 本身）
+social:
+  rss: RSS
+  github: GitHub
+  email: 电子邮箱

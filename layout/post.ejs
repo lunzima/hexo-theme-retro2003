@@ -1,0 +1,38 @@
+<%
+  // 阅读时长：中文 400 字/分、拉丁 200 词/分，分别计后相加、向上取整，最少 1 分钟。
+  // （分开计是因为两者的阅读速率差一倍以上，混在一起算会明显偏低。）
+  var plain = strip_html(page.content).replace(/\s+/g, ' ').trim();
+  var cjk = (plain.match(/[\u4e00-\u9fa5]/g) || []).length;
+  var latin = (plain.replace(/[\u4e00-\u9fa5]/g, ' ').match(/[A-Za-z0-9]+/g) || []).length;
+  var minutes = Math.max(1, Math.ceil(cjk / 400 + latin / 200));
+  // 目录依赖标题锚点（hexo-renderer-marked 默认产 id）。toc() 在无标题时返回空串，
+  // 此时整块不渲染 —— 不留一个空框。
+  var tocHtml = toc(page.content);
+  // 相关文章：本站三篇都没有 tags/categories，无可依据的相关度。
+  // 退化策略取「按时间最近的其他文章」，并在界面上就叫「相关文章」而不是「同类文章」。
+  var related = site.posts.sort('-date').filter(function (p) { return p.path !== page.path; }).limit(3).toArray();
+%>
+<article class="card">
+  <h2 class="card-head"><%= page.title %></h2>
+  <div class="card-body">
+    <div class="post-meta"><%= __('post.published') %>：<%= date(page.date, 'YYYY-MM-DD HH:mm') %> · 约 <%= minutes %> 分钟读完</div>
+    <% if (tocHtml) { %>
+    <nav class="post-toc" aria-label="本文目录">
+      <h3 class="post-toc-title">本文目录</h3>
+      <%- tocHtml %>
+    </nav>
+    <% } %>
+    <div class="post-body"><%- page.content %></div>
+    <% if (related.length) { %>
+    <nav class="post-related" aria-label="相关文章">
+      <h3 class="post-related-title">相关文章</h3>
+      <ul>
+        <% related.forEach(function (p) { %>
+        <li><a href="<%- url_for(p.path) %>"><%= p.title %></a><span class="post-related-date"><%= date(p.date, 'YYYY-MM-DD') %></span></li>
+        <% }); %>
+      </ul>
+    </nav>
+    <% } %>
+  </div>
+  <%- partial('_partial/comments') %>
+</article>

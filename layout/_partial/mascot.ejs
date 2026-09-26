@@ -1,0 +1,24 @@
+<%#
+  看板娘（Live2D）。默认关，开了也要自己填模型与四个库的地址 —— 都不随主题分发。
+  容器的 style 是硬要求，别改：
+    · pointer-events:none —— 看板娘是纯装饰，全脚本没有任何交互绑定。写成可交互会让整块
+      矩形（含 PNG 的透明像素）吞掉点击，透明处也照样吞。将来真要模型可点，用库自己的
+      hit test，不要放开容器。
+    · z-index 比播放器高一档（播放器是 99999998）。
+  right/bottom 只是初始值，运行时会按观感常量重写 —— 容器与模型墨迹共用那组常量，
+  容器一挪，兜底图与模型一起挪。
+%>
+<% var l2d = theme.live2d || {}; %>
+<% if (l2d.enable) { %>
+<div class="Canvas" id="L2dCanvas" style="pointer-events:none; position:fixed; right:0; bottom:0; z-index:99999999">
+</div>
+<script>window.__L2D__=<%- JSON.stringify({
+  libs: l2d.libs || [],
+  model_base: l2d.model_base || '',
+  fallback: l2d.fallback || '',
+  width: l2d.width || 480,
+  height: l2d.height || 270,
+  mobile: !!l2d.mobile
+}).replace(/</g, '\\u003c') %>;</script>
+<script src="/js/l2d-runtime.js"></script>
+<% } %>

@@ -1,0 +1,1379 @@
+/*
+ * retro2003 — 2003 年门户观感
+ * 版式与配色令牌取自 Wayback 存档里真实门户页面的 <style> 与标签属性，不是凭印象重画的
+ */
+
+/* 调色板：有彩度的颜色全部由 oklch(L C H) 给出。
+   换档 = 改主题配置里的 palette（见 _config.yml）：写死一档时服务端直接给 <html data-palette>，
+   写 weekly 则由 head.ejs 那段内联脚本在首次绘制前设同一个属性。选档发生在浏览器里，
+   所以七个档都得在场（六份 _palette-*.styl 在文件末尾 @import 进来）。
+   L 与 C 不是全站固定值：每档的基准 (L, C) 由该档自己的元素锚点折算 —— 所以「谁比谁深」
+   在同一档内仍成立（整组同乘一个系数），档与档之间的深浅则是刻意不同的。
+   WCAG 对比度用的是 sRGB 相对亮度、与 OKLab 的 L 不等价，所以每档的取值都要实测。
+   默认档 = 水元素（档名 water）：H 取 water 锚点、L/C 由该锚点折算，并因白字压色带的对比度
+   不足做过整组平移 —— 所以它的取值不等于参考页原色，也不与参考页逐字节相同。 */
+/* 自定义拉丁字体接入。unicode-range 只覆盖拉丁与常用标点，多出的 9 个码位
+   （— – “ ” ‘ ’ … € ™）是刻意的：它们落到栈里更靠后的 Verdana（1.215 em）会照样跳行。
+   子集 cmap 不含任何 CJK 码位，CJK 仍落到宋体/雅黑。
+   font-display:optional 是刻意的：swap 的代价是中途换字（位置尺寸可以不动，但笔画从
+   Verdana/Times 换成 DejaVu/Tinos）—— 那是看得见的闪烁，而几何测量抓不到它。
+   optional 没有 swap 期：字体在极短阻塞期内到就用、没到这次加载就全程不用，永不中途换字。
+   敢用它是因为回退层已与嵌入字体度量一致（400/700 成对）：那样「没用上嵌入字体」只意味着
+   字形不同，行框高度、换行、块高全都不变。head 里给这 4 个 woff2 加了 preload。
+   只发 woff2、不留 woff 回退：WOFF2 从 Chrome 36 / Firefox 39 / Safari 10 / Edge 14 起支持，
+   不支持它的浏览器里没有一台是目标浏览器（目标范围就是「利旧设备 + 现代浏览器」）。
+   落不到 woff2 的浏览器落到 Retro Sans/Serif Fallback（src: local(...) + 度量覆写，
+   行框照旧不变），退化的是字形不是版式。 */
+@font-face
+  font-family "Retro Serif Latin"
+  font-style normal
+  font-weight 400
+  font-display optional
+  src url("/fonts/RetroSerifLatin-Regular.woff2") format("woff2")
+  unicode-range U+0000-00FF, U+2013-2014, U+2018-201D, U+2026, U+20AC, U+2122
+
+@font-face
+  font-family "Retro Serif Latin"
+  font-style normal
+  font-weight 700
+  font-display optional
+  src url("/fonts/RetroSerifLatin-Bold.woff2") format("woff2")
+  unicode-range U+0000-00FF, U+2013-2014, U+2018-201D, U+2026, U+20AC, U+2122
+
+@font-face
+  font-family "Retro Sans Latin"
+  font-style normal
+  font-weight 400
+  font-display optional
+  src url("/fonts/RetroSansLatin-Regular.woff2") format("woff2")
+  unicode-range U+0000-00FF, U+2013-2014, U+2018-201D, U+2026, U+20AC, U+2122
+
+@font-face
+  font-family "Retro Sans Latin"
+  font-style normal
+  font-weight 700
+  font-display optional
+  src url("/fonts/RetroSansLatin-Bold.woff2") format("woff2")
+  unicode-range U+0000-00FF, U+2013-2014, U+2018-201D, U+2026, U+20AC, U+2122
+
+:root
+  --r2k-blue     oklch(0.4697 0.1268 248.1)
+  --r2k-hi       oklch(0.5300 0.1094 245.8)
+  --r2k-blue-dk  oklch(0.4390 0.1225 249.4)
+  --r2k-navy     oklch(0.3149 0.0886 249.6)
+  --r2k-link     oklch(0.2722 0.0958 256.6)
+  --r2k-visited  oklch(0.3575 0.1228 258.2)
+  /* 与品牌蓝互补的强调色，同样跟着旋转，互补关系不变 */
+  --r2k-hover    oklch(0.4208 0.1294 33.6)
+  /* 调色板角色：强调色。当前无消费方，但保留 —— 它属于「随色相一起旋转的调色板角色」，
+     删掉它，将来要用强调色时就会重新挑一个不参与旋转的颜色，自洽性当场断掉。 */
+  --r2k-accent   oklch(0.7666 0.1379 84.9)
+  /* 主按钮渐变的亮端，跟档转（暗端是 var(--r2k-blue)）—— 两端一起走，默认档就是 #1668C0。
+     #5B9BE0 上白字仅 2.91:1，所以亮端最亮只能取到白字 ≥ 4.5 的位置（默认档 5.56:1）。 */
+  --r2k-btn-light #1668C0
+
+  /* 背景/表面类角色，随变体一起转：保 L 与 C、只转 H（与 palette-gen.js 生成其他令牌同一套构造）。
+     保 L 是有意义的 —— 对比度只取决于相对亮度，所以换档不改变对比度关系；它的 C 只有 0.0083，
+     任何色相都在色域内，用不上降彩度那一套。
+     代码注释色没有跟着参数化，是刻意的：它属于语法高亮色族（hl-string / hl-number / hl-title /
+     hl-meta / hl-comment），那一族要跨主题稳定辨识、整族固定 —— 五个里只让一个随变体转，
+     下一个人改调色板时会以为另外四个漏改了；而它的 C 只有 0.0175，转 H 的视觉收益几乎为零。 */
+  --r2k-quote-bg oklch(0.9823 0.0083 265.8)
+
+  /* 无彩度（C≈0）的颜色与色相无关，保持硬编码 ——
+     这些是逐字照抄真实页的中性值，不参数化才守得住"逐字对齐" */
+  --r2k-ink      #000000
+  --r2k-dim      #6B6B6B
+  --r2k-muted    #999999
+  --r2k-line     #CECECE
+  --r2k-bg       #F1F1F1
+  --r2k-paper    #FFFFFF
+  /* 版心固定上限，不随视口放大：1230 − 30 = 180+15+760+15+230 */
+  --r2k-page-w   1230px
+  /* 左栏 180px（内容约需 174px） */
+  --r2k-side-w   180px
+  --r2k-rail-w   minmax(230px, 1fr)
+  --r2k-text-w   760px
+
+/* 字体令牌与调色板分成两个 :root —— 它们是两件事：调色板随 theme_config.palette 切换，
+   字体不随任何变体变。混在一个块里，将来有人拆调色板时会连字体一起搬走。 */
+/* 度量覆盖的本地回退 —— 它是 font-display:optional 敢用的前提。
+   optional 在字体没赶上窗口时整次加载都用回退字体，那时回退字体的度量必须自己站得住，
+   否则「没用上嵌入字体」会从「字形不同」变成真正的版式变化（纯 Latin 行比 CJK 行矮一截、
+   基线也偏）。所以把竖直度量覆盖成与 webfont 完全一致：两态行框高度相同 —— 它因此与平台
+   无关，不管拉丁落在哪个本地字体上，只要由这一层接管，行框就与 webfont 相同。
+   数值取自字体本身：Sans asc 1.058 / desc 0.262（= 雅黑 1.320 em），
+   Serif asc 0.8594 / desc 0.1406（= 宋体 1.000 em）。local() 里列出本地家族名，后面仍保留
+   原始字体名兜底 —— 一个都没命中时不能让这一层变成空。
+
+   ★ 每个字重都要有一个字面，不能只给 400：竖直度量有 ascent/descent-override 可覆盖，
+     横向字宽没有对应的 override（CSS 里没有 advance-override 这种东西），只能靠「每个字重
+     都提供一个度量正确的本地字面」。少一个 700 时，粗体拿 400 的宽度去合成（合成粗体只加粗、
+     不变宽），webfont 一到就换回本来的宽度、整段重排 —— 而粗体正是标题、导航、<strong>
+     这些最显眼的地方。 */
+@font-face
+  font-family "Retro Sans Fallback"
+  font-weight 400
+  src local("Verdana"), local("DejaVu Sans"), local("Arial")
+  ascent-override 105.8%
+  descent-override 26.2%
+  line-gap-override 0%
+
+@font-face
+  font-family "Retro Sans Fallback"
+  font-weight 700
+  src local("Verdana Bold"), local("DejaVu Sans Bold"), local("Arial Bold")
+  ascent-override 105.8%
+  descent-override 26.2%
+  line-gap-override 0%
+
+@font-face
+  font-family "Retro Serif Fallback"
+  font-weight 400
+  src local("Times New Roman"), local("Songti SC"), local("Noto Serif CJK SC"), local("DejaVu Serif")
+  ascent-override 85.94%
+  descent-override 14.06%
+  line-gap-override 0%
+
+@font-face
+  font-family "Retro Serif Fallback"
+  font-weight 700
+  src local("Times New Roman Bold"), local("Songti SC Bold"), local("DejaVu Serif Bold")
+  ascent-override 85.94%
+  descent-override 14.06%
+  line-gap-override 0%
+
+:root
+  /* CJK 字体名不加引号时 Stylus 静默产出空 CSS */
+  --font-ui     "Retro Sans Latin", "Retro Sans Fallback", Verdana, Tahoma, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", "Heiti SC", "Noto Sans CJK SC", "Source Han Sans SC", "WenQuanYi Micro Hei", sans-serif
+  --font-serif  "Retro Serif Latin", "Retro Serif Fallback", "宋体", SimSun, "Songti SC", "Songti TC", "Noto Serif CJK SC", "Source Han Serif SC", serif
+  --font-mono   Consolas, "Cascadia Mono", Menlo, "DejaVu Sans Mono", "Noto Sans Mono CJK SC", monospace
+
+
+/* 各档的令牌覆盖（wind 风 / stone 岩 / thunder 雷 / grass 草 / fire 火 / ice 冰）
+   不在这里 —— 每档一份 _palette-<档名>.styl，在文件末尾 @import 进来，靠
+   html[data-palette="<档名>"] 属性选择器生效（属性 (0,1,1) 压过本文件里默认档的 :root (0,1,0)）。
+   本文件保留默认档（上面那个 :root，即水元素 water 档）与全部取值出处。 */
+
+
+*
+  box-sizing border-box
+  border-radius 0
+
+html, body
+  margin 0
+  padding 0
+
+body
+  min-height 100vh
+  display flex
+  flex-direction column
+  background var(--r2k-paper)
+  color var(--r2k-ink)
+  font-family var(--font-ui)
+  font-size 14px
+
+.page
+  flex 1 0 auto
+  display flex
+  flex-direction column
+
+/* 五条横带共用版心 */
+.masthead-inner,
+.navbar-list,
+.utility-inner,
+.footer-inner,
+.body
+  max-width var(--r2k-page-w)
+  margin 0 auto
+  padding-left 15px
+  padding-right 15px
+
+/* 页眉与页脚必须逐字同色 —— 用共享选择器保证，改一处两边一起变。
+   渐变直接内联、不经令牌：三层 var 嵌套（令牌 → --r2k-blue-dk → oklch(calc(...))）
+   在 Chrome 里解析失败，整条 background 会退化成 none（页眉页脚整条底色消失）。
+   两层嵌套正常。 */
+.masthead, .footer
+  background-image linear-gradient(90deg, var(--r2k-blue-dk) 0%, var(--r2k-blue) 100%)
+
+.masthead
+  border-bottom 2px solid var(--r2k-navy)
+
+/* 参考页 brandBanner 行高 42 减 2px 边框 */
+.masthead-inner
+  height 40px
+  display flex
+  align-items center
+  gap 14px
+
+.banner
+  position relative      /* 隐藏段的参照；它必须脱流，否则会吃掉省略号预算 */
+  padding-left 5.4px     /* 上方三条统一右移，见下方 BAND-INSET 那段 */
+  color var(--r2k-paper)
+  text-decoration none
+  font-size 18px
+  font-weight bold
+  white-space nowrap
+  min-width 0
+  overflow hidden
+  text-overflow ellipsis
+
+/* 副标题留在 DOM 与无障碍树里，不参与渲染也不占宽度。
+   transparent 比"同背景色"更强（底色是渐变，没有单一色可同）；
+   不用 display:none/visibility:hidden，那会把它从读屏里去掉。
+   absolute 是必须的：opacity:0 不脱流，会吃掉省略号预算 */
+.banner-sub
+  position absolute
+  color transparent
+  opacity 0
+
+/* 需 a.banner:link 才压得住 a:link 下划线 */
+a.banner:link, a.banner:visited
+  color var(--r2k-paper) !important
+  text-decoration none
+
+
+.masthead-search
+  margin-left auto
+  display flex
+  align-items center
+  gap 4px
+  /* 这一组要的是「略偏上，不是几何居中」，而下面两件事都得写死才稳：
+     1) line-height 不能用 normal —— 它取「当前拉丁字体」的度量，而 Retro Sans Latin 是
+        font-display: optional：命中与否、落到哪一档回退字体，输入框的高度都不同
+        （实测 24.8px 就是它撑出来的），在 dpr 1.25/1.5 上吸附到哪一行也跟着漂。
+        钉成 18px、边框钉成 1px 之后，输入框与按钮的高度正好 24px，与字体无关。
+     2) 行高推不动墨迹：半行距上下对称，flex 居中又把它抵消回来 —— 实测把行高从
+        19.2px 改成 17px，墨迹中心仍是 46.12px。所以这一组的上下位置只能靠显式位移，
+        而 CSS 布局在 dpr=1 上没有亚像素：这个量只能取 0 或 1px。
+        取 0 —— 实测 1px 上提看起来已经偏高（dpr 1 与 4 都量过，墨迹中心 45.12）。
+     改这两个数之前按同法重量（4× 无头截图 + 数像素，见 D:\Web\dev\）。 */
+  line-height 18px
+
+.masthead-search .search-label
+  color var(--r2k-paper)
+
+.masthead-search .search-input
+  width 170px
+
+/* 内边距与边框写死：高度 = 18(行高) + 4(上下内边距) + 2(上下边框) = 24px，整数。
+   不写死的话由 UA 默认值 + 字体行高拼出 24.8px，落在半个设备像素上。 */
+.masthead-search .search-input,
+.masthead-search .search-btn
+  border 1px solid var(--r2k-muted)
+
+.masthead-search .search-input
+  padding 2px 4px
+
+.masthead-search .search-btn
+  padding 2px 6px
+
+.navbar
+  background #F1F1F1
+  border-top 1px solid #999999
+  border-bottom 1px solid #999999
+  padding 2px 0
+
+.navbar-list
+  height 23px
+  display flex
+  align-items flex-start
+  font-size 16px   /* 参考页 #localToolbar { font-size: 100% } */
+
+/* 23 = 1px 边框 + 21px 行高 + 1px 边框，行高须 >= CJK 内容区 */
+.lt0
+  display block
+  flex none
+  height 23px
+  line-height 21px
+  border 1px solid #F1F1F1
+  background #F1F1F1
+  padding 0 6px
+  white-space nowrap
+  transition background-color .1s ease, border-color .1s ease
+
+.lt1
+  display block
+  flex none
+  height 23px
+  line-height 21px
+  border 1px solid #999999
+  background #CCCCCC
+  padding 0 6px
+  white-space nowrap
+
+.ltsep
+  display block
+  flex none
+  height 23px
+  line-height 23px
+  font-size 10pt
+  color var(--r2k-dim)   /* 参考页 #A9A9A9 仅 2.08:1，偏离为 --r2k-dim */
+  padding 0 1px
+
+/* 参考页 #localToolbar a { font: 70% Verdana } */
+.navbar .lt0 a, .navbar .lt1 a
+  display block
+  height 21px
+  line-height 21px
+  font-size 10pt
+  color #000000
+  text-decoration none
+  padding 0
+
+/* 三栏间距只由 column-gap 给；正文列封顶 760px */
+.body
+  width 100%
+  flex 1 0 auto
+  display grid
+  grid-template-columns var(--r2k-side-w) minmax(0, var(--r2k-text-w)) var(--r2k-rail-w)
+  grid-template-areas "nav main rail"
+  column-gap 15px
+  padding-top 12px
+
+/* 默认 stretch 让三栏同高 */
+/* 左栏贴合内容，其余两栏仍 stretch */
+/* 面板贴合内容，四边不悬空；border-box 下加边框不改 180px 栏宽 */
+.sidebar
+  grid-area nav
+  align-self start
+  width var(--r2k-side-w)
+  max-width var(--r2k-side-w)
+  background var(--r2k-bg)
+  border 1px solid var(--r2k-line)
+
+.content
+  grid-area main
+  min-width 0
+
+.aside-col
+  grid-area rail
+  min-width 0
+
+
+.aside-col .box-list li a
+  padding-left 0
+  padding-right 0
+
+/* 分区线在内部各格之间；末格不画，否则与面板下边框成双线 */
+.box
+  /* 左右内边距与 .card 的「边框 + 10px」对齐（那条规则写在下方 .card 处）——
+   两栏的「文字相对边框」必须一致：0.8 + 10 = 10.8。 */
+  padding 6px 10px 8px
+  border-bottom 1px solid var(--r2k-line)
+  &:last-child
+    border-bottom none
+
+.box-title
+  margin 0 0 4px
+  font-size 14px
+  font-weight bold
+  cursor pointer
+
+.box-title[aria-expanded]::after
+  content "−"
+  float right
+  color var(--r2k-dim)
+
+.box-title[aria-expanded="false"]::after
+  content "+"
+
+.box-title:focus-visible
+  outline 2px solid var(--r2k-blue)
+  outline-offset 1px
+
+.quick-index
+  width 100%
+  margin 2px 0 0
+
+.box-list
+  list-style none
+  margin 0
+  padding 0
+
+.box-list li
+  margin 0 0 3px
+
+/* 标签/分类名由作者随手写，可能是不含空格的长串。实测一个 80 字符的英文标签名
+   在没有这条规则时绘制到 x=735.8，而侧栏右沿只有 213.2 —— 整串横穿正文栏。
+   break-word 只在「一个词自己就放不下」时才断，正常词条名不受影响。 */
+.box-list li a
+  display block
+  padding 3px 7px
+  text-decoration none
+  line-height 1.5
+  transition color .1s ease
+  overflow-wrap break-word
+
+a:link
+  color var(--r2k-link)
+  text-decoration underline
+a:visited
+  color var(--r2k-visited)
+  text-decoration underline
+a:hover
+  color var(--r2k-hover)
+
+/* 每条带最靠左的文字落在该带的内容边缘上 */
+.utility-list > li:first-child > a
+  padding-left 0
+
+/* BAND-INSET = 上方三条相对「内容边缘」的右移量，5.4px。
+   取 0（完全贴内容边缘）时三条与左栏卡片内的文字只隔 10.8px，看着三条偏左、左栏偏右；
+   取到与左栏文字齐平（约 10.8px）则丢掉「上方比栏内文字略微靠外」的层次。5.4 是两者的折中。
+   ★ 同一个约定被三处分别编码，必须同改：
+       .utility-list 的左内边距 5.4px / .banner 的左内边距 5.4px /
+       .navbar-list > :first-child 的负边距补偿 = -7 + 5.4 = -1.6px
+   导航那条不能靠父容器 padding：那里的 -7px 作用是把悬停块的文字拉到内容边缘上，两者会打架。 */
+
+/* 用 :first-child 而非 .lt0:first-child：悬停换类名会失配、导航跳 7px */
+.navbar-list > :first-child
+  margin-left -1.6px      /* -7px + BAND-INSET */
+
+/* 卡片内文字左右沿 = 边框 + 10px */
+.card
+  border 1px solid var(--r2k-line)
+  background var(--r2k-paper)
+  margin-bottom 14px
+
+/* 标题里可能出现不含空格的长串：tag.ejs / category.ejs 的卡片头是「标签：<名字>」，
+   实测一个 80 字符的英文标签名让卡片头的文字越出正文栏 116px。
+   break-word 只在「一个词自己就放不下」时才断，正常中英标题不受影响。 */
+.card-head, .comments-title
+  margin 0
+  font-size 16px
+  font-weight bold
+  background linear-gradient(90deg, var(--r2k-paper), var(--r2k-hi))
+  border-bottom 1px solid var(--r2k-line)
+  padding 6px 10px
+  overflow-wrap break-word
+
+.card-body
+  padding 10px
+
+.card-more
+  margin 10px 0 0
+  text-align right
+
+.pager
+  display flex
+  align-items center
+  justify-content space-between
+  margin-top 10px
+  padding-top 10px
+  border-top 1px solid var(--r2k-line)
+
+.pager-link
+  color var(--r2k-link)
+  &:hover
+    color var(--r2k-hover)
+
+.pager-link.is-off
+  color var(--r2k-dim)
+  text-decoration none
+
+.pager-info
+  color var(--r2k-dim)
+
+.post-list
+  list-style none
+  /* 上下各收 2px：条目自身上下各 8px、条目之间 = 8 + 0.8(分隔线) + 8 = 16.8px，而 .card-body 的
+   上下内边距是 10px，于是「首条之上」「末条之下」各成 18px、比条目之间多 1.2px —— 多的正是
+   "那里没有分隔线"。收 2px 后两端各 16px。只作用于列表，不动 .card-body（那个类还用于正文页 /
+   页面 / 右栏，全局改会连带它们）。 */
+  margin -2px 0
+  padding 0
+
+.post-item
+  padding 8px 0
+  border-bottom 1px dotted var(--r2k-line)
+  &:last-child
+    border-bottom none
+
+.post-item-title
+  margin 0 0 3px
+  font-size 15px
+
+.post-item-meta, .post-meta
+  color var(--r2k-dim)
+  margin-bottom 3px
+
+.post-item-excerpt
+  line-height 1.7
+  overflow-wrap break-word   /* 摘要里可能有裸 URL */
+
+/* 「全部标签 / 全部分类」总览页（layout/tags.ejs、layout/categories.ejs）。
+   每行整体是一个 <a>：<a> 自己就是 flex 容器，名称靠左、篇数靠右，
+   于是点击区域是整行宽度，而文字左沿仍落在「卡片边框 + 10px」上
+   —— 横向 padding 必须给 0，那是 .card-body 的职责（全站不变量）。 */
+.term-list
+  list-style none
+  margin 0
+  padding 0
+
+.term-item
+  border-bottom 1px dotted var(--r2k-line)
+  &:last-child
+    border-bottom none
+
+/* 必须写成 a.term-link 而不是 .term-link：全局 a:link 是 (0,1,1)，
+   只写 .term-link (0,1,0) 会被它压过（.banner 上已经栽过一次）。 */
+a.term-link
+  display flex
+  align-items baseline
+  gap 10px
+  padding 5px 0
+  &:link, &:visited
+    color var(--r2k-link)
+    text-decoration none
+  &:hover
+    color var(--r2k-hover)
+    text-decoration underline
+
+.term-name
+  flex 1 1 auto
+  min-width 0               /* 没有它，长标签名不换行、把篇数挤出卡片 */
+  overflow-wrap break-word
+
+.term-count
+  flex 0 0 auto
+  color var(--r2k-dim)
+
+.term-intro
+  margin 0 0 10px
+  color var(--r2k-dim)
+  p
+    margin 0
+
+.term-empty
+  margin 0
+  color var(--r2k-dim)
+  & + &
+    margin-top 6px
+
+.post-body
+  font-family var(--font-serif)
+  line-height 1.8
+  line-break strict
+  word-break normal
+  overflow-wrap break-word
+
+/* .headerlink 是空 <a>，指示符只能由 CSS 生成。
+   ★ 锚点在产物里是前置的（<h2 id="…"><a class="headerlink"></a>标题</h2>），所以 margin 必须给
+     右侧：给左侧会变成 [6px][#][紧贴文字]，两边都不对。现在锚点盒贴齐内容左沿、# 与文字相距 6px。
+   ★ 标题文字左沿仍比正文左沿右 19.41px（= # 前进宽 13.41 + 6px 间隙）—— 那是「前置标记占位」的
+     固有结果，换 margin 改不动。要让文字与正文左沿对齐，得把 # 拉进左侧空槽；本项目没采用，
+     因为卡片内边距只有 10px 而 # 前进宽 13.41px，左槽不够（右对齐时 # 必然越出内边框 3.41px）。 */
+.post-body .headerlink
+  margin-right 6px
+  color var(--r2k-line)
+  text-decoration none
+
+.post-body .headerlink::before
+  content "#"
+
+.post-body .headerlink:hover, .post-body .headerlink:focus
+  color var(--r2k-hover)
+
+.post-toc
+  margin 0 0 10px
+  padding 8px 10px
+  background var(--r2k-bg)
+  border 1px solid var(--r2k-line)
+
+.post-toc-title
+  margin 0 0 4px
+  font-size 14px
+
+.post-toc ol
+  margin 0
+  padding-left 20px
+  list-style none
+
+.post-toc a
+  text-decoration none
+
+.post-related
+  margin 14px 0 0
+  padding-top 10px
+  border-top 1px solid var(--r2k-line)
+
+.post-related-title
+  margin 0 0 4px
+  font-size 14px
+
+.post-related ul
+  list-style none
+  margin 0
+  padding 0
+
+/* 日期独立成行，否则左沿随标题宽度变 */
+.post-related-date
+  display block
+  color var(--r2k-dim)
+
+.masthead-search
+  position relative
+
+.search-results
+  position absolute
+  top 100%
+  right 0
+  z-index 10
+  width 320px
+  background var(--r2k-paper)
+  border 1px solid var(--r2k-muted)
+
+.search-results ul
+  list-style none
+  margin 0
+  padding 6px 0
+
+.search-results li
+  padding 2px 10px
+
+.search-date
+  margin-left 8px
+  color var(--r2k-dim)
+
+.search-empty
+  margin 0
+  padding 2px 10px
+  color var(--r2k-dim)
+
+/* 正文是衬线，回黑体处须显式写 */
+.post-body h1, .post-body h2, .post-body h3
+  font-family var(--font-ui)
+  border-bottom 1px solid var(--r2k-line)
+  padding-bottom 2px
+  margin 14px 0 6px
+
+.post-body h1
+  font-size 18px
+.post-body h2
+  font-size 16px
+.post-body h3
+  font-size 15px
+
+.post-body p
+  margin 0 0 8px
+  text-indent 0
+
+.post-body ul, .post-body ol
+  margin 0 0 8px
+  padding-left 22px
+
+.post-body li
+  margin-bottom 2px
+
+.post-body code
+  font-family var(--font-mono)
+  font-size 10pt
+  background var(--r2k-bg)
+  border 1px solid var(--r2k-line)
+  padding 0 3px
+
+.post-body pre
+  background var(--r2k-bg)
+  border 1px solid var(--r2k-line)
+  padding 8px
+  white-space pre
+  overflow-x auto
+  line-height 1.5
+
+.post-body pre code
+  border none
+  background none
+  padding 0
+
+/* highlight 产物是 figure.highlight > table > td > pre，没有 <code>，上面那套够不着 */
+.post-body figure.highlight
+  margin 0 0 8px
+  background var(--r2k-bg)
+  border 1px solid var(--r2k-line)
+  padding 8px
+  overflow-x auto
+
+.post-body figure.highlight table
+  width auto
+  border-collapse collapse
+
+.post-body figure.highlight td
+  border none
+  padding 0
+  vertical-align top
+
+.post-body figure.highlight pre
+  margin 0
+  border none
+  background none
+  padding 0
+  font-family var(--font-mono)
+  font-size 10pt
+  line-height 1.5
+
+.post-body figure.highlight .gutter
+  color var(--r2k-dim)
+  padding-right 12px
+  text-align right
+  user-select none
+
+/* token 配色，底 #F1F1F1 上均 >= 4.5 */
+.post-body figure.highlight .comment,
+.post-body figure.highlight .quote
+  color #5A626B
+.post-body figure.highlight .keyword,
+.post-body figure.highlight .selector-tag,
+.post-body figure.highlight .literal,
+.post-body figure.highlight .section,
+.post-body figure.highlight .link
+  color var(--r2k-navy)
+.post-body figure.highlight .string,
+.post-body figure.highlight .regexp,
+.post-body figure.highlight .addition
+  color #1A6B2F
+.post-body figure.highlight .number,
+.post-body figure.highlight .built_in,
+.post-body figure.highlight .type
+  color #8A3A00
+.post-body figure.highlight .title,
+.post-body figure.highlight .attr
+  color #5A2D82
+.post-body figure.highlight .meta,
+.post-body figure.highlight .deletion
+  color #A33333
+
+.post-body blockquote
+  margin 6px 0
+  padding 4px 10px
+  border-left 3px solid var(--r2k-blue)
+  background var(--r2k-quote-bg)
+
+.post-body table
+  border-collapse collapse
+  width 100%
+
+/* 单元格里的不可断长串会撑开表格的 min-content —— width:100% 是下限不是上限、overflow-x 又是
+   visible，于是表格画到卡片外。
+   ★ 必须是 anywhere，不能沿用别处的 break-word：break-word 不参与 min-content 计算，换上去表格
+     纹丝不动。.box-list li a / .card-head 那些地方用 break-word 就够，是因为它们身处定宽容器。
+   浏览器支持：anywhere = Chrome 80 / Firefox 65 / Safari 15.4；更旧的浏览器不认识这条声明，
+   退回溢出的样子 —— 优雅降级，不是回归。 */
+.post-body th, .post-body td
+  border 1px solid var(--r2k-line)
+  padding 4px 8px
+  overflow-wrap anywhere
+
+.post-body th
+  background var(--r2k-bg)
+  font-family var(--font-ui)
+
+.post-body img
+  max-width 100%
+  height auto   /* 缺这条时带 width/height 的图会被压扁 */
+  border 1px solid var(--r2k-line)
+
+.post-body hr
+  border none
+  border-top 1px solid var(--r2k-line)
+  margin 12px 0
+
+/* 标记由 site-components.js 注入 */
+.comments
+  margin 14px 0 0
+  border-top 1px solid var(--r2k-line)
+
+.comments-body
+  padding 10px
+
+/* 空的 #twikoo 会多顶出 10px */
+#twikoo:not(:empty)
+  margin-top 10px
+
+.comments-hint
+  margin 0 0 10px
+  color var(--r2k-dim)
+  line-height 1.7
+
+/* 表单控件不继承字体 */
+.quick-index, .search-input, .search-btn, .comments-open
+  font-family var(--font-ui)
+  font-size 14px
+  border 1px solid var(--r2k-muted)
+  background var(--r2k-paper)
+  padding 2px 6px
+
+.search-btn, .comments-open
+  cursor pointer
+  background linear-gradient(180deg, #fdfdfd, var(--r2k-bg))
+  box-shadow inset 1px 1px 0 rgba(255, 255, 255, .9), inset -1px -1px 0 rgba(0, 0, 0, .2)
+  text-decoration none
+  display inline-flex
+  align-items center
+  gap 6px
+  &:hover
+    color var(--r2k-hover)
+  &:active
+    border-top-color var(--r2k-muted)
+    border-left-color var(--r2k-muted)
+    border-bottom-color var(--r2k-paper)
+    border-right-color var(--r2k-paper)
+
+/* 须排在按钮组之后：与 .search-btn 同权重，靠源码顺序取胜 */
+#twikoo
+  font-size 10pt
+
+#twikoo .tk-input__inner,
+#twikoo .tk-textarea__inner,
+#twikoo .tk-input-group__prepend,
+#twikoo .tk-input-group__append,
+#twikoo .tk-input__count,
+#twikoo .tk-button,
+#twikoo .tk-button__label,
+#twikoo .OwO-item
+  font-size 10pt
+
+#twikoo *
+  border-radius 0
+
+#twikoo .tk-input__inner,
+#twikoo .tk-textarea__inner
+  border 1px solid var(--r2k-muted)
+  background var(--r2k-paper)
+  color var(--r2k-ink)
+
+#twikoo .tk-input-group__prepend,
+#twikoo .tk-input-group__append
+  border 1px solid var(--r2k-muted)
+  background var(--r2k-bg)
+  color var(--r2k-ink)
+
+#twikoo .tk-input__count
+  color var(--r2k-dim)
+
+#twikoo .tk-button
+  font-family var(--font-ui)
+  border 1px solid var(--r2k-muted)
+  background linear-gradient(180deg, #fdfdfd, var(--r2k-bg))
+  box-shadow inset 1px 1px 0 rgba(255, 255, 255, .9), inset -1px -1px 0 rgba(0, 0, 0, .2)
+  color var(--r2k-ink)
+  &:hover
+    color var(--r2k-hover)
+
+#twikoo .tk-button--primary
+  border 1px solid var(--r2k-navy)
+  /* 两端都跟档走，色相距离刻意留着 —— 别把其中一端写死。 */
+  background linear-gradient(180deg, var(--r2k-btn-light), var(--r2k-blue))
+  color var(--r2k-paper)
+  &:hover
+    color var(--r2k-paper)
+
+#twikoo .tk-button.is-disabled
+  border-color var(--r2k-muted)
+  background var(--r2k-bg)
+  box-shadow none
+  color var(--r2k-muted)
+  cursor not-allowed
+
+/* 不能写成 #twikoo a，markdown 按钮是 <a> */
+#twikoo .tk-content a:link, #twikoo .tk-content a:visited
+  color var(--r2k-link)
+#twikoo .tk-content a:hover
+  color var(--r2k-hover)
+
+#twikoo .tk-comments-actions .tk-icon
+  color var(--r2k-dim)
+  &:hover
+    color var(--r2k-hover)
+
+/* 与页眉共用同一条渐变，见 .masthead, .footer 那条共享规则 */
+.footer
+  border-top 2px solid var(--r2k-navy)
+  color var(--r2k-paper)
+
+.footer-inner
+  padding-top 8px
+  padding-bottom 8px
+
+/* 色带最亮处除纯白外无颜色可达 4.5:1，hover 只加下划线 */
+.footer a:link, .footer a:visited
+  color var(--r2k-paper)
+  text-decoration none
+
+.footer a:hover
+  text-decoration underline
+
+.footer-marquee
+  overflow hidden
+  border-top 1px solid var(--r2k-line)
+
+.footer-marquee span
+  display inline-block
+  white-space nowrap
+  color var(--r2k-dim)
+  line-height 22px
+  padding-left 8px
+  animation marquee 20s linear infinite
+
+@keyframes marquee
+  0%
+    transform translateX(100vw)
+  100%
+    transform translateX(-100%)
+
+.utility
+  background var(--r2k-bg)
+  border-bottom 1px solid var(--r2k-line)
+
+.utility-inner
+  display flex
+  align-items center
+  gap 10px
+  padding-top 3px
+  padding-bottom 3px
+
+.utility-list
+  display flex
+  align-items center
+  list-style none
+  margin 0
+  padding 0 0 0 5.4px      /* 上方三条统一右移，见下方 BAND-INSET 那段 */
+
+.utility-list > li > a
+  color var(--r2k-link)   /* 同时压掉 :visited */
+  text-decoration none
+  padding 0 6px
+  &:hover
+    color var(--r2k-hover)
+
+.utility-list > li + li::before
+  content "|"
+  color var(--r2k-dim)
+
+.fade-in
+  animation fade .25s ease both
+
+@keyframes fade
+  from
+    opacity 0
+  to
+    opacity 1
+
+@media (max-width: 1140px)
+  .body
+    grid-template-columns var(--r2k-side-w) minmax(0, var(--r2k-text-w))
+    grid-template-areas "nav main" "nav rail"
+  .aside-col
+    display grid
+    grid-template-columns repeat(auto-fit, minmax(190px, 1fr))
+    gap 14px
+    /* 上下各留 12px：这个断点下右栏是 .body 的最后一行，不留底部间距的话，
+       卡片下边框会与页脚跑马灯的上边框直接贴上（实测间距 0.0px）。 */
+    padding 12px 0 12px
+    .card
+      margin-bottom 0
+
+@media (max-width: 760px)
+  .body
+    grid-template-columns minmax(0, 1fr)
+    grid-template-areas "main" "nav" "rail"
+  .sidebar
+    width auto
+    border-right none
+    border-top 1px solid var(--r2k-line)
+    margin-top 12px
+  .aside-col
+    padding 12px 0 12px
+  .masthead-inner
+    gap 8px
+  .banner
+    font-size 16px
+
+@media (max-width: 620px)
+  .masthead-search
+    display none
+
+/* 打印：去导航与装饰，单列黑白，链接地址展开在文字后。 */
+@media print
+  .masthead
+  .navbar
+  .utility
+  .sidebar
+  .aside-col
+  .footer
+  .footer-marquee
+  #L2dCanvas
+  /* 评论区整块（section.comments#comments）：评论标题、说明行、「发表评论」按钮、#twikoo 容器与
+   已加载的表单/评论列表都要在打印时隐掉。一个选择器就够 —— .comments 只匹配 class 里真有
+   comments 这个词的元素（.comments-title / .comments-body / .comments-open 是各自独立的词，
+   不会被误伤，它们藏在 section 里跟着藏）。 */
+  .comments
+    display none
+
+  .body
+    display block
+    max-width none
+    padding 0
+
+  .content
+    max-width none
+    padding 0
+
+  .card
+    border none
+    margin 0
+
+  .card-head
+    background none
+    border-bottom 1px solid #000
+    padding-left 0
+    padding-right 0
+
+  .card-body
+    padding-left 0
+    padding-right 0
+
+  .post-body
+    color #000
+    background #fff
+
+  .post-body a[href^="http"]::after
+    content " (" attr(href) ")"
+
+@media (prefers-reduced-motion: reduce)
+  /* 关掉动画后 nowrap 会被 overflow:hidden 裁掉 */
+  /* reduce 态下它是静态公告：居中并给足留白 */
+  .footer-marquee
+    text-align center
+
+  .footer-marquee span
+    display block          /* 块级：inline-block 会在行盒里留基线余量，带子就贴不紧文字 */
+    animation none
+    white-space normal
+    padding 6px 10px
+  .fade-in
+    animation none
+
+/* ── 七个配色档 ─────────────────────────────────────────────────────
+   默认档（水元素）就是上面 :root 里那批令牌；另外六档在 _palette-*.styl，
+   在这里并进来 —— 合成一个 style.css，不再每档单独出一份文件。
+   选档发生在浏览器里（head.ejs 那段脚本按周设置 html[data-palette]），
+   所以七档必须同时在场；合计约 2,300 B。这是把选档从服务端挪到浏览器之后的代价，
+   也是「一个访客只下他那一档」那条旧约定失效的地方。
+   文件名的下划线让 hexo 跳过它们：并入之后不需要再单独产出 .css。
+   三个档名（文件名 / 注释 / 选择器）要一致，写错不会有构建报错，只会静默落到默认档。 */
+@import '_palette-wind'
+@import '_palette-stone'
+@import '_palette-thunder'
+@import '_palette-grass'
+@import '_palette-fire'
+@import '_palette-ice'
+
+/* ── BGM 播放器 ─────────────────────────────────────────────────────
+   站级组件（layout/_partial/bgm.ejs 与 source/js/bgm-player.js），这里只管外观。
+   几何全部是显式的数值和：条宽 176、字号 9pt、每个滑块所在的容器高 = 滑块高 13，
+   9px 的凹槽/楔形在里面居中（上下各 2px），所以滑块上下各凸 2px，靠容器身高承担、
+   不靠负偏移去凑垂直位置。下面写的是 dpr=1 的基准值；进度滑块那几个由运行时 fitSeek()
+   按实际 dpr 重写（分数缩放下要吸到设备像素，否则一边凸得多、宽还会随播放抖）。
+   图标是抗锯齿的实形，不用 shape-rendering:crispEdges。
+   ──────────────────────────────────────────────────────────────── */
+#bgm-player
+  position fixed
+  left 8px
+  bottom 8px
+  z-index 99999998        /* 比看板娘低一档：看板娘是装饰，播放器是可操作件 */
+  font-family Tahoma, "宋体", SimSun, sans-serif
+  font-size 9pt
+
+#bgm-player .bgm-ico
+  display block
+  fill currentColor
+#bgm-player .bgm-ico-play
+  width 7px
+  height 9px
+#bgm-player .bgm-ico-pause
+  width 9px
+  height 9px
+#bgm-player .bgm-ico-stop
+  width 7px
+  height 7px
+#bgm-player .bgm-ico-min
+  width 6px
+  height 1px
+#bgm-player .bgm-ico-disc
+  width 18px
+  height 18px
+  /* 圆盘取 fill、里面的三角取 color（symbol 里三角那个 path 用的是 currentColor） */
+  fill var(--r2k-blue)
+  color var(--r2k-paper)
+#bgm-player .bgm-ico-vol
+  width 9px
+  height 9px
+
+#bgm-player .bgm
+  position relative
+
+#bgm-player .bgm-collapsed .bgm-bar
+  display none
+#bgm-player .bgm-collapsed .bgm-tab
+  display flex
+
+#bgm-player .bgm-tab
+  display none
+  width 28px
+  height 28px
+  box-sizing border-box
+  align-items center
+  justify-content center
+  background var(--r2k-bg)
+  border 1px solid var(--r2k-muted)
+  /* 本地中性值（斜面高光/暗面），不进令牌也不进闸门的彩度扫描；
+     #b8b8b8 在本段出现 4 次、#d8d8d8 出现 2 次，改一处要一起改 */
+  box-shadow inset 1px 1px 0 var(--r2k-paper), inset -1px -1px 0 #b8b8b8
+  color var(--r2k-link)
+  padding 0
+
+#bgm-player .bgm-bar
+  width 176px
+  background var(--r2k-paper)
+  border 1px solid var(--r2k-muted)
+  box-shadow inset 1px 1px 0 var(--r2k-paper)
+  box-sizing border-box
+
+#bgm-player .bgm-t
+  height 16px
+  box-sizing border-box
+  padding 0 2px 0 4px
+  background linear-gradient(var(--r2k-blue-dk), var(--r2k-blue))
+  color var(--r2k-paper)
+  line-height 16px
+  display flex
+  align-items center
+  justify-content space-between
+  cursor move
+  user-select none
+
+#bgm-player .bgm-min
+  width 12px
+  height 12px
+  box-sizing border-box
+  padding 0 0 2px
+  flex-shrink 0
+  background rgba(255,255,255,.28)
+  border 1px solid rgba(255,255,255,.55)
+  color var(--r2k-paper)
+  display flex
+  align-items flex-end
+  justify-content center
+  cursor default      /* 标题条整体是 cursor:move，这个按钮不是拖动区 */
+
+#bgm-player .bgm-row
+  height 19px
+  box-sizing border-box
+  padding 1px 3px
+  display flex
+  align-items center
+  gap 4px
+
+/* 液晶读数窗的颜色固定不跟档：它模仿一台具体设备的读数窗，不属于站点皮肤。
+   机头（标题条、按钮、字）都跟档转，只有这块读数窗保持原样，才像硬件。 */
+#bgm-player .bgm-lcd
+  width 42px
+  height 17px
+  box-sizing border-box
+  flex-shrink 0
+  background #0a1f4a
+  border 1px solid #1e77d3
+  color #9fd0ff
+  text-align center
+  /* 行高 17 而不是内容盒的 15：数字没有下伸部，行盒按字体的 ascent/descent 对称分半行距，
+     会把墨迹推到中心上方。行盒比内容盒高 2px 会溢出，但墨迹离上下边框仍有 3px 以上。 */
+  font bold 9pt/17px "Courier New", monospace
+
+#bgm-player .bgm-name
+  flex 1
+  min-width 0
+  height 17px
+  color var(--r2k-link)
+  line-height 17px
+  overflow hidden
+  white-space nowrap
+  text-overflow ellipsis
+
+#bgm-player .bgm-seekwrap
+  position relative
+  height 13px
+  margin 0 3px
+
+#bgm-player .bgm-seek
+  position absolute
+  left 0
+  right 0
+  /* 这两个值与 .bgm-thumb 的宽高是 dpr=1 下的基准；运行时 fitSeek() 会按实际 dpr
+     重新写一遍（吸到设备像素上），分数缩放下才不会一边凸得多一边凸得少、宽度才不会抖 */
+  top 2px
+  height 9px
+  box-sizing border-box
+  background var(--r2k-line)
+  border-top 1px solid var(--r2k-muted)
+  border-bottom 1px solid var(--r2k-paper)
+
+#bgm-player .bgm-seek i
+  position absolute
+  left 0
+  top 0
+  bottom 0
+  display block
+  background linear-gradient(var(--r2k-btn-light), var(--r2k-blue))
+
+#bgm-player .bgm-thumb
+  position absolute
+  top 0
+  width 5px
+  height 13px
+  box-sizing border-box
+  background var(--r2k-bg)
+  border 1px solid var(--r2k-dim)
+
+#bgm-player .bgm-seekwrap .bgm-thumb
+  margin-left -2px
+
+#bgm-player .bgm-btns
+  height 19px
+  box-sizing border-box
+  padding 0 3px
+  display flex
+  align-items center
+  gap 5px
+
+#bgm-player .bgm-btn
+  width 21px
+  height 15px
+  box-sizing border-box
+  flex-shrink 0
+  padding 0
+  background var(--r2k-bg)
+  border 1px solid var(--r2k-muted)
+  box-shadow inset 1px 1px 0 var(--r2k-paper), inset -1px -1px 0 #b8b8b8
+  color var(--r2k-ink)
+  display flex
+  align-items center
+  justify-content center
+
+#bgm-player .bgm-btn.bgm-on
+  background #d8d8d8
+  box-shadow inset 1px 1px 0 #b8b8b8
+  /* 字色与常态同为 --r2k-ink，按下与否只由底色与内阴影承担 —— 换个更浅的字色会把
+     深浅关系弄反（常态比按下还深），看着像按钮「没按实」。 */
+  color var(--r2k-ink)
+
+#bgm-player .bgm-spacer
+  flex 1
+
+#bgm-player .bgm-volgroup
+  display flex
+  align-items center
+  gap 2px
+  flex-shrink 0
+
+#bgm-player .bgm-spk
+  width 9px
+  height 15px
+  box-sizing border-box
+  flex-shrink 0
+  padding 0
+  border 0
+  background none
+  color var(--r2k-ink)
+  display flex
+  align-items center
+  justify-content center
+
+#bgm-player .bgm-spk.bgm-muted
+  color #b0b0b0
+
+#bgm-player .bgm-volwrap
+  position relative
+  width 30px
+  height 13px
+  flex-shrink 0
+
+#bgm-player .bgm-ramp
+  position absolute
+  left 0
+  right 0
+  top 2px
+  height 9px
+  /* 楔形斜边刻意让浏览器抗锯齿（左端 5px 起、右端 9px 满高的斜坡） */
+  clip-path polygon(0 100%, 0 5px, 100% 0, 100% 100%)
+  /* --fill 由 paintVol() 按音量档写入；颜色全走令牌，运行时只给几何 */
+  background linear-gradient(90deg, var(--r2k-btn-light) 0 var(--fill, 0px), var(--r2k-line) var(--fill, 0px) 100%)
+
+#bgm-player .bgm-trackbtn
+  width 28px
+  height 15px
+  box-sizing border-box
+  flex-shrink 0
+  padding 0
+  background var(--r2k-bg)
+  border 1px solid var(--r2k-muted)
+  box-shadow inset 1px 1px 0 var(--r2k-paper)
+  color var(--r2k-link)
+  font 9pt/13px "宋体", SimSun, Tahoma, sans-serif
+  text-align center
+
+#bgm-player .bgm-open .bgm-trackbtn
+  background #d8d8d8
+  box-shadow inset 1px 1px 0 #b8b8b8
+
+/* 进度与音量的真控件：透明铺满，键盘与触摸行为白拿；焦点环画在容器上 */
+#bgm-player .bgm-range
+  position absolute
+  left 0
+  top 0
+  width 100%
+  height 100%
+  margin 0
+  opacity 0
+  cursor pointer
+#bgm-player .bgm-seekwrap:focus-within, #bgm-player .bgm-volwrap:focus-within
+  outline 1px dotted var(--r2k-link)
+  outline-offset 1px
+
+#bgm-player .bgm-list
+  display none
+  border-top 1px solid var(--r2k-muted)
+#bgm-player .bgm-open .bgm-list
+  display block
+
+#bgm-player .bgm-row2
+  display flex
+  align-items center
+  justify-content space-between
+  width 100%
+  height 17px
+  box-sizing border-box
+  padding 0 3px
+  border 0
+  background var(--r2k-paper)
+  color var(--r2k-link)
+  font 9pt/17px "宋体", SimSun, Tahoma, sans-serif
+  text-align left
+#bgm-player .bgm-row2 em
+  font-style normal
+  color var(--r2k-dim)
+#bgm-player .bgm-row2:nth-child(even)
+  background #f7f7f7
+/* 必须排在 :nth-child(even) 之后 —— 两者特异性相同，靠源序取胜；
+   调换顺序会让偶数行上的当前曲目高亮静默消失 */
+#bgm-player .bgm-row2.bgm-cur
+  background var(--r2k-blue)
+  color var(--r2k-paper)
+#bgm-player .bgm-row2.bgm-cur em
+  color var(--r2k-paper)
+  opacity .75
+
+/* 窄屏不在这层强制收起。自动收起与手动收起是同一个状态，由运行时按宽度定初值
+   （bgm-player.js）；这里只认 .bgm-collapsed，所以点 28×28 的方块才真能展开成完整条。
+   写成 @media 里 display:none 整条的话，方块点不开 —— 播放器本来就只有 JS 在场
+   才存在，那条 media query 是绕过了唯一的状态源。 */

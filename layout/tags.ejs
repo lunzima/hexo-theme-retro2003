@@ -1,0 +1,7 @@
+<%# 「全部标签」总览页。layout: tags 由 source/tags/index.md 指定。
+    注意与同目录的 tag.ejs 区分：那个是单个标签的文章列表（生成器产出，layout: tag）。 %>
+<%- partial('_partial/term-index', {
+      termItems: site.tags,
+      termHead:  __('terms.all_tags'),
+      termEmpty: __('terms.empty_tags')
+    }) %>

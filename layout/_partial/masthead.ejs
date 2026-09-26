@@ -1,0 +1,36 @@
+<div class="utility">
+  <div class="utility-inner">
+    <ul class="utility-list">
+      <li><a href="<%- url_for('/') %>">本站首页</a></li>
+      <li><a href="<%- url_for('/archives/') %>"><%= __('footer.sitemap') %></a></li>
+    </ul>
+  </div>
+</div>
+
+<%# 标题栏：整条深蓝底（真实页 brandBanner #0A6CCE → 工具条 #1E77D3），标题白字。
+    搜索框在这一行右端，对应真实页 #globalSearch 的位置。
+    这个表单是真能用的：提交或聚焦时才去取 /search.json（索引不进首屏关键路径）。 %>
+<div class="masthead">
+  <div class="masthead-inner">
+    <%
+      // 标题栏只显示主标题，副标题留在 DOM 里（供读屏与复制）。
+      // 用 config.subtitle 定位，不硬编码 " - " 这种分隔符；找不到就整串照常显示。
+      var fullTitle = config.title || '';
+      var sub = config.subtitle || '';
+      var head = fullTitle, tail = '';
+      var at = sub ? fullTitle.indexOf(sub) : -1;
+      if (at > -1) {
+        head = fullTitle.slice(0, at).replace(/[\s\-–—·|]+$/, '');
+        tail = fullTitle.slice(head.length);   // 含分隔符，拼起来仍是完整标题
+      }
+    %>
+    <a class="banner" href="<%- url_for('/') %>"><span class="logo"><%= head %></span><% if (tail) { %><span class="banner-sub"><%= tail %></span><% } %></a>
+    <form class="masthead-search" action="<%- url_for('/') %>" method="get" role="search">
+      <label class="search-label" for="search-input">搜索本站：</label>
+      <input class="search-input" id="search-input" type="search" name="q"
+             placeholder="<%= __('search.placeholder') %>" autocomplete="off">
+      <button class="search-btn" type="submit">搜索</button>
+      <div class="search-results" id="search-results" hidden></div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,43 @@
+<%#
+  「全部标签」/「全部分类」两个总览页共用的版式。
+  两页只差数据源与文案，全部由调用方传入，模板里不写死任何一边 ——
+  将来要加第三个维度（年份、作者）时不必把结构复制一遍。
+
+  调用方（layout/tags.ejs、layout/categories.ejs）传：
+    termItems  仓库查询（site.tags / site.categories）
+    termHead   卡片标题（page.title 缺失时的兜底）
+    termEmpty  空态那句话
+%>
+<%
+  var items = [];
+  termItems.each(function(t){
+    items.push({ name: t.name, path: t.path, count: t.length || 0 });
+  });
+  // 篇数多的排前面；篇数相同按名称定序。
+  // 不直接用仓库的 .sort()：它排的是内部文档序，同值之间的先后不保证稳定，
+  // 会让「同一份源、两次构建」产出不同 HTML。
+  items.sort(function(a, b){
+    if (b.count !== a.count) return b.count - a.count;
+    return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0);
+  });
+%>
+<article class="card">
+  <h2 class="card-head"><%= page.title || termHead %></h2>
+  <div class="card-body">
+    <%# 正文那行同时是 <meta name="description"> 的来源（head.ejs 读 page.content），
+        所以它既是给人看的导语，也不是一段只为搜索引擎存在的空话。 %>
+    <% if (page.content) { %><div class="term-intro"><%- page.content %></div><% } %>
+    <% if (items.length) { %>
+    <ul class="term-list">
+      <% items.forEach(function(it){ %>
+      <li class="term-item">
+        <a class="term-link" href="<%- url_for(it.path) %>"><span class="term-name"><%= it.name %></span><span class="term-count"><%= it.count %> 篇</span></a>
+      </li>
+      <% }); %>
+    </ul>
+    <% } else { %>
+    <p class="term-empty"><%= termEmpty %></p>
+    <p class="term-empty"><%= __('terms.empty_tail') %><a href="<%- url_for('/archives/') %>"><%= __('archive.title') %></a>。</p>
+    <% } %>
+  </div>
+</article>

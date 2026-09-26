@@ -1,0 +1,90 @@
+<%
+  // 每页各自的描述：文章页优先 page.description，其次摘要/正文，最后回落站点描述 ——
+  // 原先全站共用 config.description，搜索结果里三篇文章的摘要句完全一样。
+  var desc = page.description;
+  if (!desc && page.excerpt) desc = strip_html(page.excerpt);
+  if (!desc && page.content) desc = strip_html(page.content);
+  if (desc) desc = desc.replace(/\s+/g, ' ').trim().slice(0, 120);
+  if (!desc) desc = config.description;
+  var pageTitle = page.title ? page.title + ' - ' + config.title : config.title;
+  var canonical = config.url.replace(/\/$/, '') +
+    (page.path && page.path !== 'index.html' ? '/' + page.path.replace(/index\.html$/, '') : '/');
+  var kw = Array.isArray(config.keywords) ? config.keywords.join(',') : (config.keywords || '');
+  var isPost = page.layout === 'post';
+  // 配色：'weekly' 由浏览器按周选档；写成七个档名之一则固定那一档。不写就是 'default'。
+  // 七个档名同时也是 _palette-*.styl 的文件名后缀与它们选择器里的属性值。
+  var PALETTES = ['default', 'wind', 'stone', 'thunder', 'grass', 'fire', 'ice'];
+  var palCfg = theme.palette || 'default';
+  if (palCfg !== 'weekly' && PALETTES.indexOf(palCfg) < 0) {
+    throw new Error('theme_config.palette 不是合法值：' + palCfg +
+      '（应为 weekly，或 ' + PALETTES.join(' / ') + ' 之一）');
+  }
+  var weekly = palCfg === 'weekly';
+  var fixedPal = (!weekly && palCfg !== 'default') ? palCfg : '';
+%><!DOCTYPE html>
+<%# 配色档位来自主题配置的 palette：
+      · 七个档名之一 —— 固定该档；'default' 即水元素基准档，不写属性。这也是不写时的默认值
+      · 'weekly' —— 按周轮换，属性由下面那段内联脚本在首次绘制前设置
+    合法值在这里断言一次：写错直接让构建失败，不静默退回默认档。 %>
+<html lang="<%= config.language || 'zh-cn' %>"<% if (fixedPal) { %> data-palette="<%= fixedPal %>"<% } %>>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= pageTitle %></title>
+  <meta name="description" content="<%= desc %>">
+  <% if (kw) { %><meta name="keywords" content="<%= kw %>"><% } %>
+  <meta name="author" content="<%= config.author %>">
+  <link rel="canonical" href="<%- canonical %>">
+  <link rel="icon" href="<%- url_for('/favicon.ico') %>" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="<%- url_for('/favicon-32.png') %>">
+  <link rel="apple-touch-icon" href="<%- url_for('/apple-touch-icon.png') %>">
+  <%# 字体 preload：font-display:optional 只在极短阻塞期内等字体，
+      不 preload 的话请求要等 CSS 解析完才发出，几乎必然错过那个窗口、
+      这次加载就全程用回退字体（字节白下）。放在样式表之前，让请求尽早发出。
+      crossorigin 是字体 preload 的硬要求（字体按 CORS 模式取）。 %>
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="<%- url_for('/fonts/RetroSerifLatin-Regular.woff2') %>">
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="<%- url_for('/fonts/RetroSerifLatin-Bold.woff2') %>">
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="<%- url_for('/fonts/RetroSansLatin-Regular.woff2') %>">
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="<%- url_for('/fonts/RetroSansLatin-Bold.woff2') %>">
+  <link rel="stylesheet" href="<%- url_for('/css/style.css') %>">
+  <%# 六个非默认档已由 style.styl 的 @import 并进 style.css（同一份文件里靠
+      html[data-palette="<档名>"] 属性选择器区分），所以这里不再引 palette-*.css。
+      属性 (0,1,1) 压过默认档的 :root (0,1,0)。 %>
+  <% if (weekly) { %>
+  <script>
+  /* 按周轮换档位。周界取 UTC+8 的周一 00:00 —— 定死一个时区，同一时刻所有访客看到同一档
+     （若按访客本地时间算，跨时区的两个人会在周界附近看到不同颜色）。
+     1970-01-01 是星期四，所以天数 +3 之后、能被 7 整除的边界正好落在周一。
+     这段脚本必须同步执行、且留在 <head>：首次绘制之前属性已经落好，七个档一起发也不会闪。
+     它没跑时（禁用 JS）<html> 上没有属性，落到 style.styl 的 :root —— 水元素默认档。 */
+  (function () {
+    var N = ['default', 'wind', 'stone', 'thunder', 'grass', 'fire', 'ice'];
+    var day = Math.floor((Date.now() + 288e5) / 864e5);
+    var i = ((Math.floor((day + 3) / 7) % N.length) + N.length) % N.length;
+    if (N[i] !== 'default') document.documentElement.setAttribute('data-palette', N[i]);
+  })();
+  </script>
+  <% } %>
+  <link rel="alternate" type="application/atom+xml" title="<%= config.title %>" href="<%- url_for('/atom.xml') %>">
+  <meta property="og:type" content="<%= isPost ? 'article' : 'website' %>">
+  <meta property="og:site_name" content="<%= config.title %>">
+  <meta property="og:title" content="<%= pageTitle %>">
+  <meta property="og:description" content="<%= desc %>">
+  <meta property="og:url" content="<%- canonical %>">
+  <% if (isPost && page.date) { %><meta property="article:published_time" content="<%- date_xml(page.date) %>"><% } %>
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="<%= pageTitle %>">
+  <meta name="twitter:description" content="<%= desc %>">
+  <script type="application/ld+json"><%- JSON.stringify(
+    isPost
+      ? { '@context': 'https://schema.org', '@type': 'BlogPosting',
+          headline: page.title, description: desc, mainEntityOfPage: canonical,
+          datePublished: page.date ? date_xml(page.date) : undefined,
+          dateModified: page.updated ? date_xml(page.updated) : undefined,
+          author: { '@type': 'Person', name: config.author },
+          publisher: { '@type': 'Organization', name: config.title } }
+      : { '@context': 'https://schema.org', '@type': 'WebSite',
+          name: config.title, url: canonical, description: desc,
+          author: { '@type': 'Person', name: config.author } }
+  ).replace(/</g, '\\u003c') %></script>
+</head>

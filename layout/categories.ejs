@@ -1,0 +1,7 @@
+<%# 「全部分类」总览页。layout: categories 由 source/categories/index.md 指定。
+    注意与同目录的 category.ejs 区分：那个是单个分类的文章列表（生成器产出，layout: category）。 %>
+<%- partial('_partial/term-index', {
+      termItems: site.categories,
+      termHead:  __('terms.all_categories'),
+      termEmpty: __('terms.empty_categories')
+    }) %>
