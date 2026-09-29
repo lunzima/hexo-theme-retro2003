@@ -80,6 +80,12 @@
      下一个人改调色板时会以为另外四个漏改了；而它的 C 只有 0.0175，转 H 的视觉收益几乎为零。 */
   --r2k-quote-bg oklch(0.9823 0.0083 265.8)
 
+  /* 播放器的液晶读数窗（时间显示）的底 / 边框 / 字。它跟档转，但只转色相 —— 逐档按该档
+     --r2k-blue 的位移旋转 H，L 与 C 保默认档。它模仿的是硬件：换档只换背光色，底暗字亮的
+     明暗关系不随档变，字/底对比度才各档一致。默认档取自 #0a1f4a / #1e77d3 / #9fd0ff。 */
+  --r2k-lcd-bg   oklch(0.2522 0.0846 262.5)
+  --r2k-lcd-edge oklch(0.5683 0.1626 253.6)
+  --r2k-lcd-text oklch(0.8399 0.0838 247.8)
   /* 无彩度（C≈0）的颜色与色相无关，保持硬编码 ——
      这些是逐字照抄真实页的中性值，不参数化才守得住"逐字对齐" */
   --r2k-ink      #000000
@@ -1175,16 +1181,14 @@ a.term-link
   align-items center
   gap 4px
 
-/* 液晶读数窗的颜色固定不跟档：它模仿一台具体设备的读数窗，不属于站点皮肤。
-   机头（标题条、按钮、字）都跟档转，只有这块读数窗保持原样，才像硬件。 */
 #bgm-player .bgm-lcd
   width 42px
   height 17px
   box-sizing border-box
   flex-shrink 0
-  background #0a1f4a
-  border 1px solid #1e77d3
-  color #9fd0ff
+  background var(--r2k-lcd-bg)
+  border 1px solid var(--r2k-lcd-edge)
+  color var(--r2k-lcd-text)
   text-align center
   /* 行高 17 而不是内容盒的 15：数字没有下伸部，行盒按字体的 ascent/descent 对称分半行距，
      会把墨迹推到中心上方。行盒比内容盒高 2px 会溢出，但墨迹离上下边框仍有 3px 以上。 */
