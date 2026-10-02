@@ -984,12 +984,15 @@ a.term-link
     grid-template-columns minmax(0, 1fr)
     grid-template-areas "main" "nav" "rail"
   .sidebar
+    /* max-width 必须与 width 一起放开：上限胜过宽度，只写 auto 面板仍被 --r2k-side-w 卡住，
+       而它这一行在移动端是通栏的（上下都是通栏卡片）。 */
     width auto
-    border-right none
-    border-top 1px solid var(--r2k-line)
+    max-width none
     margin-top 12px
   .aside-col
-    padding 12px 0 12px
+    /* 右栏到跑马灯要与「正文末卡片到左栏」同宽：那边是卡片 14px 外边距 + 12px 段间距两层，
+       而右栏卡片的外边距在 ≤1140 被网格 gap 顶掉了 —— 缺的那层补在容器上。 */
+    margin-bottom 14px
   .masthead-inner
     gap 8px
   .banner
