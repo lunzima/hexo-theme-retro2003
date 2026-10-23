@@ -22,11 +22,41 @@
     });
   });
 
-  // 2) 快速索引下拉（移植自存档页的 load(form)）
-  //    用 location.href 而不是 window.open：这是站内跳转，没有理由开新标签
-  document.querySelectorAll('.quick-index').forEach(function (sel) {
-    sel.addEventListener('change', function () {
-      if (sel.value) location.href = sel.value;
+  // 2) 快速索引下拉。原生 select 的弹出层由浏览器/系统绘制（Windows 11 下是圆角菜单），
+  //    页面 CSS 改不了它，所以用按钮 + 链接列表自绘。
+  document.querySelectorAll('.quick-index').forEach(function (box) {
+    var btn = box.querySelector('.quick-index-toggle');
+    var menu = box.querySelector('.quick-index-menu');
+    if (!btn || !menu) return;
+    function setOpen(v) {
+      menu.hidden = !v;
+      btn.setAttribute('aria-expanded', v ? 'true' : 'false');
+    }
+    function items() {
+      return Array.prototype.slice.call(menu.querySelectorAll('a'));
+    }
+    btn.addEventListener('click', function () { setOpen(menu.hidden); });
+    btn.addEventListener('keydown', function (e) {
+      if (e.key !== 'ArrowDown') return;
+      e.preventDefault();
+      setOpen(true);
+      var first = items()[0];
+      if (first) first.focus();
+    });
+    menu.addEventListener('keydown', function (e) {
+      if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+      e.preventDefault();
+      var list = items(), i = list.indexOf(document.activeElement);
+      var n = e.key === 'ArrowDown' ? i + 1 : i - 1;
+      if (n < 0) n = list.length - 1;
+      if (n >= list.length) n = 0;
+      list[n].focus();
+    });
+    document.addEventListener('click', function (e) {
+      if (!menu.hidden && !box.contains(e.target)) setOpen(false);
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !menu.hidden) { setOpen(false); btn.focus(); }
     });
   });
 

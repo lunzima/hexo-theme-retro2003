@@ -1,24 +1,26 @@
 <%# 左栏 = 站点导航。开关取自 theme.sidebar，与右栏 _partial/aside.ejs 共用同一组配置。 %>
 <% var sb = theme.sidebar || {}; %>
 <aside class="sidebar">
-  <%# 「快速索引」下拉。retro.js 里对应的 change 行为与样式都要靠本模板这个
-      <select> 才落地 —— 没有它，那些 JS 就是死代码。 %>
+  <%# 「快速索引」下拉。retro.js 里对应的开合行为与样式都要靠本模板这个
+      .quick-index 结构才落地 —— 没有它，那些 JS 就是死代码。 %>
   <% if (sb.quick_index !== false) { %>
   <section class="box">
     <h3 class="box-title"><%= __('sidebar.quick_index') %></h3>
-    <select class="quick-index">
-      <option value=""><%= __('sidebar.jump') %></option>
-      <option value="<%- url_for('/') %>"><%= __('nav.home') %></option>
-      <% for (var name in theme.menu) { %>
-      <option value="<%- url_for(theme.menu[name]) %>"><%= name %></option>
-      <% } %>
+    <div class="quick-index">
+      <button type="button" class="quick-index-toggle" aria-haspopup="true" aria-expanded="false"><%= __('sidebar.jump') %></button>
+      <ul class="quick-index-menu" hidden>
+        <li><a href="<%- url_for('/') %>"><%= __('nav.home') %></a></li>
+        <% for (var name in theme.menu) { %>
+        <li><a href="<%- url_for(theme.menu[name]) %>"><%= name %></a></li>
+        <% } %>
       <%# 两个总览页不进 theme.menu —— 那个配置同时是页眉导航的数据源，
           往它里面加项会把页眉那条横带的几何一起改掉（五条横带等宽是硬不变量）。
           但总览页必须有站内入口，否则就是孤儿页；放这里是因为这个下拉本来的
           用途就是「选择要去的页面」。 %>
-      <option value="<%- url_for('/tags/') %>"><%= __('terms.all_tags') %></option>
-      <option value="<%- url_for('/categories/') %>"><%= __('terms.all_categories') %></option>
-    </select>
+        <li><a href="<%- url_for('/tags/') %>"><%= __('terms.all_tags') %></a></li>
+        <li><a href="<%- url_for('/categories/') %>"><%= __('terms.all_categories') %></a></li>
+      </ul>
+    </div>
   </section>
   <% } %>
 

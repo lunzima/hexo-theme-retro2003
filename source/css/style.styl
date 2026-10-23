@@ -389,8 +389,49 @@ a.banner:link, a.banner:visited
   outline-offset 1px
 
 .quick-index
-  width 100%
+  position relative
   margin 2px 0 0
+
+.quick-index-toggle
+  display block
+  width 100%
+  box-sizing border-box
+  color var(--r2k-ink)
+  text-align left
+  cursor pointer
+
+.quick-index-toggle::after
+  content "▼"
+  float right
+  color var(--r2k-dim)
+
+.quick-index-menu
+  position absolute
+  left 0
+  right 0
+  top 100%
+  z-index 10
+  margin 0
+  padding 0
+  list-style none
+  background var(--r2k-paper)
+  border 1px solid var(--r2k-muted)
+  border-top 0
+
+.quick-index-menu a
+  display block
+  padding 2px 6px
+  text-decoration none
+  white-space nowrap
+  overflow hidden
+  text-overflow ellipsis
+
+.quick-index-menu a:hover
+  text-decoration underline
+
+.quick-index-menu a:focus-visible
+  outline 2px solid var(--r2k-blue)
+  outline-offset -2px
 
 .box-list
   list-style none
@@ -802,7 +843,7 @@ a.term-link
   line-height 1.7
 
 /* 表单控件不继承字体 */
-.quick-index, .search-input, .search-btn, .comments-open
+.quick-index-toggle, .search-input, .search-btn, .comments-open
   font-family var(--font-ui)
   font-size 14px
   border 1px solid var(--r2k-muted)
