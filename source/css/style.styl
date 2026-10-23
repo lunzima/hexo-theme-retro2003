@@ -409,6 +409,7 @@ a.banner:link, a.banner:visited
   float right
   color var(--r2k-dim)
 
+
 .quick-index-menu
   position absolute
   left 0
@@ -416,25 +417,31 @@ a.banner:link, a.banner:visited
   top 100%
   z-index 10
   margin 0
-  padding 0
+  padding 4px 0
   list-style none
   background var(--r2k-paper)
-  border 1px solid var(--r2k-muted)
-  border-top 0
+  box-shadow 0 4px 12px rgba(0, 0, 0, .18)
 
 .quick-index-menu a
   display block
-  padding 2px 6px
-  text-decoration none
+  padding 7px 12px
+  font-family "Segoe UI", system-ui, sans-serif
   white-space nowrap
   overflow hidden
   text-overflow ellipsis
 
+.quick-index-menu a:link, .quick-index-menu a:visited
+  color var(--r2k-ink)
+  text-decoration none
+
 .quick-index-menu a:hover
-  text-decoration underline
+  background #e5e5e5
+  color var(--r2k-ink)
+  text-decoration none
 
 .quick-index-menu a:focus-visible
-  outline 2px solid var(--r2k-blue)
+  background #e5e5e5
+  outline 1px dotted var(--r2k-link)
   outline-offset -2px
 
 .box-list
