@@ -22,11 +22,10 @@
     });
   });
 
-  // 2) 快速索引下拉（移植自存档页的 load(form)）
-  //    用 location.href 而不是 window.open：这是站内跳转，没有理由开新标签
-  document.querySelectorAll('.quick-index').forEach(function (sel) {
-    sel.addEventListener('change', function () {
-      if (sel.value) location.href = sel.value;
+  // 2) 快速索引：开合由 details 原生负责，这里只补「点外部关闭」。
+  document.querySelectorAll('.quick-index').forEach(function (box) {
+    document.addEventListener('click', function (e) {
+      if (box.open && !box.contains(e.target)) box.open = false;
     });
   });
 
